@@ -1,0 +1,50 @@
+[
+  {
+    "rule_id": "mutable_default_argument",
+    "claim_type": "mutable_default",
+    "file": "app/options.py",
+    "start_line": 3,
+    "end_line": 3,
+    "message": "Mutable default argument: the default object is created once and shared across calls, so mutations can leak state between invocations.",
+    "severity_hint": "medium",
+    "category_hint": "correctness",
+    "evidence": [
+      {
+        "file": "app/options.py",
+        "line": 3,
+        "kind": "added",
+        "text": "def build_options(tags=[]):"
+      }
+    ],
+    "status": "accepted",
+    "reasons": [
+      "claim-specific evidence check passed: a mutable function default is required"
+    ],
+    "validator_version": "alma-evidence-gate/1.0.0",
+    "policy_sha256": "3ad514ede02e6eefc9b2ed0dceed144bdc6aafe21cab57aa6746c44190689f35"
+  },
+  {
+    "rule_id": "possible_hardcoded_secret_from_name",
+    "claim_type": "hardcoded_secret",
+    "file": "app/options.py",
+    "start_line": 6,
+    "end_line": 6,
+    "message": "Possible hardcoded credential: this assignment uses a credential-like variable name, so the value may be embedded in source code.",
+    "severity_hint": "high",
+    "category_hint": "security",
+    "evidence": [
+      {
+        "file": "app/options.py",
+        "line": 6,
+        "kind": "added",
+        "text": "api_key = os.getenv(\"BACKUP_API_KEY\")"
+      }
+    ],
+    "status": "rejected",
+    "reasons": [
+      "claim-specific evidence check failed: a credential assignment to a quoted literal is required"
+    ],
+    "validator_version": "alma-evidence-gate/1.0.0",
+    "policy_sha256": "3ad514ede02e6eefc9b2ed0dceed144bdc6aafe21cab57aa6746c44190689f35"
+  }
+]
