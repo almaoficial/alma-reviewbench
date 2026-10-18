@@ -1,0 +1,11 @@
+diff --git a/app/client.py b/app/client.py
+new file mode 100644
+--- /dev/null
++++ b/app/client.py
+@@ -0,0 +1,6 @@
++import requests
++
++API_TOKEN = "sk_live_123456789"
++
++def fetch(url):
++    return requests.get(url, verify=False)
