@@ -1,0 +1,45 @@
+[
+  {
+    "fixture": "01_sql",
+    "base_findings": 2,
+    "alma_findings": 1,
+    "accepted_rule_ids": [
+      "unsafe_sql_construction"
+    ],
+    "rejected_rule_ids": [
+      "possible_sql_injection_unverified_call_site"
+    ]
+  },
+  {
+    "fixture": "02_error_handling",
+    "base_findings": 2,
+    "alma_findings": 1,
+    "accepted_rule_ids": [
+      "bare_except_silences_errors"
+    ],
+    "rejected_rule_ids": [
+      "possible_cache_race_condition"
+    ]
+  },
+  {
+    "fixture": "03_mutable_default",
+    "base_findings": 2,
+    "alma_findings": 1,
+    "accepted_rule_ids": [
+      "mutable_default_argument"
+    ],
+    "rejected_rule_ids": [
+      "possible_hardcoded_secret_from_name"
+    ]
+  },
+  {
+    "fixture": "04_secrets_tls",
+    "base_findings": 2,
+    "alma_findings": 2,
+    "accepted_rule_ids": [
+      "hardcoded_secret_literal",
+      "tls_verification_disabled"
+    ],
+    "rejected_rule_ids": []
+  }
+]
