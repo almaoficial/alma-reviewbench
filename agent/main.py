@@ -1,0 +1,278 @@
+from __future__ import annotations
+
+import argparse
+from dataclasses import dataclass
+import json
+import os
+from pathlib import Path
+import sys
+from typing import Mapping
+
+from .alma_gate import POLICY_SHA256, POLICY_VERSION, AlmaGate, candidate_to_finding
+from .base_reviewer import BaseReviewer, Candidate
+from .diff_parser import parse_unified_diff
+from .llm_reviewer import LLMReviewer, RealLLMRefused
+
+
+# Backwards-compatible name: the mock-first package raised this when
+# backend=llm was requested.  It is now the refusal error of the real,
+# flag-guarded adapter (agent/llm_reviewer.py).
+LLMBackendNotConfigured = RealLLMRefused
+
+
+@dataclass
+class RunResult:
+    output: dict[str, object]
+    candidates: list[Candidate]
+    ledger: list[dict[str, object]]
+    llm_run_info: dict[str, object] | None = None
+
+
+def _normalize_repo(pr: Mapping[str, object]) -> str:
+    repo = str(pr.get("repo") or "").strip()
+    if repo.startswith("http://") or repo.startswith("https://"):
+        return repo
+    nwo = str(pr.get("nwo") or repo).strip()
+    if "/" in nwo and " " not in nwo:
+        return f"https://github.com/{nwo}"
+    return repo
+
+
+def validate_output(
+    output: Mapping[str, object],
+    *,
+    expected_head: str | None = None,
+    expected_pr_number: int | None = None,
+) -> None:
+    """Fail closed unless the output follows the ReviewBench contract."""
+
+    if set(output.keys()) != {"pr", "agent", "findings"}:
+        raise ValueError("output must contain exactly pr, agent, and findings")
+    pr = output.get("pr")
+    if not isinstance(pr, dict) or set(pr.keys()) != {"repo", "pr_number", "base", "head"}:
+        raise ValueError("output.pr must contain exactly repo, pr_number, base, and head")
+    if expected_head is not None and pr["head"] != expected_head:
+        raise ValueError("output pr.head does not equal RB_HEAD")
+    if expected_pr_number is not None and pr["pr_number"] != expected_pr_number:
+        raise ValueError("output pr.pr_number does not equal RB_PR_NUMBER")
+    if not isinstance(output.get("agent"), str) or not output["agent"]:
+        raise ValueError("output.agent must be a non-empty string")
+    findings = output.get("findings")
+    if not isinstance(findings, list):
+        raise ValueError("output.findings must be a list")
+    for finding in findings:
+        if not isinstance(finding, dict) or set(finding.keys()) != {
+            "file",
+            "start_line",
+            "end_line",
+            "message",
+            "producer",
+        }:
+            raise ValueError("each finding must contain exactly the contract fields")
+        path = finding["file"]
+        if (
+            not isinstance(path, str)
+            or not path
+            or path.startswith("./")
+            or path.startswith("/")
+            or "\\" in path
+        ):
+            raise ValueError(f"invalid repository-relative finding path: {path!r}")
+        if not isinstance(finding["start_line"], int) or not isinstance(
+            finding["end_line"], int
+        ):
+            raise ValueError("finding line numbers must be integers")
+        if finding["start_line"] < 1 or finding["end_line"] < finding["start_line"]:
+            raise ValueError("finding line range is invalid")
+        if not isinstance(finding["message"], str) or not finding["message"].strip():
+            raise ValueError("finding message must be non-empty")
+        if finding["producer"] != output["agent"]:
+            raise ValueError("finding producer must equal RB_AGENT/output.agent")
+
+
+def run_agent(
+    *,
+    diff_text: str,
+    pr_metadata: Mapping[str, object],
+    agent_name: str,
+    mode: str = "alma",
+    backend: str = "mock",
+    config: Mapping[str, str] | None = None,
+    env: Mapping[str, str] | None = None,
+    llm_transport=None,
+) -> RunResult:
+    config = dict(config or {})
+    if mode not in {"alma", "base"}:
+        raise ValueError(f"unknown governance mode {mode!r}; expected 'alma' or 'base'")
+
+    diff = parse_unified_diff(diff_text)
+    llm_run_info: dict[str, object] | None = None
+    if backend == "mock":
+        candidates = BaseReviewer().review(diff)
+    elif backend == "llm":
+        # The adapter refuses (RealLLMRefused) unless ALLOW_REAL_LLM=1, an
+        # API key, RB_MODEL_BASE_URL, a configured model and a positive
+        # RB_MAX_SPEND_USD are all present.  Its candidates pass through the
+        # same frozen gate below as the mock reviewer's.
+        reviewer = LLMReviewer.from_env(
+            dict(os.environ) if env is None else env,
+            config,
+            transport=llm_transport,
+        )
+        candidates = reviewer.review(diff_text=diff_text, diff=diff, config=config)
+        if reviewer.last_run_info is not None:
+            llm_run_info = reviewer.last_run_info.to_dict()
+    else:
+        raise ValueError(f"unknown backend {backend!r}; expected 'mock' or 'llm'")
+
+    if mode == "alma":
+        gate_result = AlmaGate().validate(candidates, diff, agent_name)
+        findings = gate_result.findings
+        ledger = [entry.to_dict() for entry in gate_result.ledger]
+    else:
+        findings = [candidate_to_finding(candidate, agent_name) for candidate in candidates]
+        ledger = [
+            {
+                "rule_id": candidate.rule_id,
+                "claim_type": candidate.claim_type,
+                "file": candidate.file,
+                "start_line": candidate.start_line,
+                "end_line": candidate.end_line,
+                "message": candidate.message,
+                "severity_hint": candidate.severity_hint,
+                "category_hint": candidate.category_hint,
+                "evidence": [
+                    {"file": candidate.file, "line": line_number, "text": text}
+                    for line_number, text in zip(
+                        range(candidate.start_line, candidate.end_line + 1),
+                        candidate.evidence_text,
+                    )
+                ],
+                "status": "accepted",
+                "reasons": ["ALMA gate bypassed for the pre-registered base A/B arm"],
+                "validator_version": "bypassed-base-arm",
+                "policy_sha256": POLICY_SHA256,
+            }
+            for candidate in candidates
+        ]
+
+    output: dict[str, object] = {
+        "pr": {
+            "repo": _normalize_repo(pr_metadata),
+            "pr_number": int(pr_metadata["pr_number"]),
+            "base": str(pr_metadata["base"]),
+            "head": str(pr_metadata["head"]),
+        },
+        "agent": agent_name,
+        "findings": findings,
+    }
+    validate_output(output)
+    return RunResult(
+        output=output, candidates=candidates, ledger=ledger, llm_run_info=llm_run_info
+    )
+
+
+def _rb_config(env: Mapping[str, str]) -> dict[str, str]:
+    config: dict[str, str] = {}
+    for key, value in sorted(env.items()):
+        if key.startswith("RB_CONFIG_"):
+            config[key.removeprefix("RB_CONFIG_").lower()] = value
+    return config
+
+
+def _print_applied_config(config: Mapping[str, str], mode: str, backend: str) -> None:
+    requested_model = config.get("model", "mock-deterministic")
+    effort = config.get("effort", "local")
+    print(
+        "alma-reviewbench "
+        f"requested_model={requested_model} effort={effort} "
+        f"effective_backend={backend} governance={mode} "
+        f"validator={POLICY_VERSION} policy_sha256={POLICY_SHA256}",
+        flush=True,
+    )
+    for key, value in sorted(config.items()):
+        print(f"config {key}={value}", flush=True)
+
+
+def main(argv: list[str] | None = None) -> int:
+    env = dict(os.environ)
+    config = _rb_config(env)
+
+    parser = argparse.ArgumentParser(description="ALMA ReviewBench reviewer")
+    parser.add_argument("--diff", default=env.get("RB_DIFF", "/work/pr/diff.patch"))
+    parser.add_argument("--pr-json", default=env.get("RB_PR_JSON", "/work/pr/pr.json"))
+    parser.add_argument("--out", default=env.get("RB_OUT", "/work/out/findings.json"))
+    parser.add_argument("--ledger", default=env.get("ALMA_LEDGER_PATH"))
+    parser.add_argument(
+        "--mode",
+        choices=["alma", "base"],
+        default=config.get("governance", config.get("mode", "alma")),
+    )
+    parser.add_argument(
+        "--backend",
+        choices=["mock", "llm"],
+        default=config.get("backend", "mock"),
+    )
+    args = parser.parse_args(argv)
+
+    agent_name = env.get("RB_AGENT", "alma-reviewer")
+    _print_applied_config(config, args.mode, args.backend)
+
+    try:
+        diff_text = Path(args.diff).read_text(encoding="utf-8")
+        pr_metadata = json.loads(Path(args.pr_json).read_text(encoding="utf-8"))
+
+        expected_head = env.get("RB_HEAD")
+        expected_pr_number = (
+            int(env["RB_PR_NUMBER"]) if env.get("RB_PR_NUMBER") else None
+        )
+        if expected_head is not None and str(pr_metadata.get("head")) != expected_head:
+            raise ValueError("pr.json head does not equal RB_HEAD")
+        if expected_pr_number is not None and int(pr_metadata.get("pr_number")) != expected_pr_number:
+            raise ValueError("pr.json pr_number does not equal RB_PR_NUMBER")
+
+        result = run_agent(
+            diff_text=diff_text,
+            pr_metadata=pr_metadata,
+            agent_name=agent_name,
+            mode=args.mode,
+            backend=args.backend,
+            config=config,
+            env=env,
+        )
+        if result.llm_run_info is not None:
+            print(
+                "alma-reviewbench llm_run "
+                + json.dumps(result.llm_run_info, ensure_ascii=False),
+                flush=True,
+            )
+        validate_output(
+            result.output,
+            expected_head=expected_head,
+            expected_pr_number=expected_pr_number,
+        )
+
+        out_path = Path(args.out)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(
+            json.dumps(result.output, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+
+        ledger_path = Path(args.ledger) if args.ledger else None
+        if ledger_path is None and env.get("RB_ALMA_LEDGER") == "1":
+            ledger_path = out_path.with_name("alma-ledger.json")
+        if ledger_path is not None:
+            ledger_path.parent.mkdir(parents=True, exist_ok=True)
+            ledger_path.write_text(
+                json.dumps(result.ledger, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+        return 0
+    except Exception as exc:  # The benchmark treats non-zero as a failed PR.
+        print(f"alma-reviewbench error: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
