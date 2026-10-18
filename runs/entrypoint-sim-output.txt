@@ -1,0 +1,8 @@
+01_sql mode=alma: exit 0, findings=1, $RB_OUT valid vs RB_HEAD/RB_PR_NUMBER
+02_error_handling mode=alma: exit 0, findings=1, $RB_OUT valid vs RB_HEAD/RB_PR_NUMBER
+03_mutable_default mode=alma: exit 0, findings=1, $RB_OUT valid vs RB_HEAD/RB_PR_NUMBER
+04_secrets_tls mode=alma: exit 0, findings=2, $RB_OUT valid vs RB_HEAD/RB_PR_NUMBER
+01_sql mode=base: exit 0, findings=2, $RB_OUT valid vs RB_HEAD/RB_PR_NUMBER
+02_error_handling mode=base: exit 0, findings=2, $RB_OUT valid vs RB_HEAD/RB_PR_NUMBER
+03_mutable_default mode=base: exit 0, findings=2, $RB_OUT valid vs RB_HEAD/RB_PR_NUMBER
+04_secrets_tls mode=base: exit 0, findings=2, $RB_OUT valid vs RB_HEAD/RB_PR_NUMBER
