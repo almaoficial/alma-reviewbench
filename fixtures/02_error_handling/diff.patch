@@ -1,0 +1,13 @@
+diff --git a/app/cache.py b/app/cache.py
+new file mode 100644
+--- /dev/null
++++ b/app/cache.py
+@@ -0,0 +1,8 @@
++cache = {}
++
++
++def load_cache(key):
++    try:
++        return cache[key]
++    except:
++        pass
