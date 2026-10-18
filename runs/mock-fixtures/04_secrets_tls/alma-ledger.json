@@ -1,0 +1,50 @@
+[
+  {
+    "rule_id": "hardcoded_secret_literal",
+    "claim_type": "hardcoded_secret",
+    "file": "app/client.py",
+    "start_line": 3,
+    "end_line": 3,
+    "message": "Hardcoded credential: a secret value is embedded directly in source code, where it can leak through the repository and cannot be rotated independently.",
+    "severity_hint": "high",
+    "category_hint": "security",
+    "evidence": [
+      {
+        "file": "app/client.py",
+        "line": 3,
+        "kind": "added",
+        "text": "API_TOKEN = \"sk_live_123456789\""
+      }
+    ],
+    "status": "accepted",
+    "reasons": [
+      "claim-specific evidence check passed: credential is assigned to a non-placeholder literal"
+    ],
+    "validator_version": "alma-evidence-gate/1.0.0",
+    "policy_sha256": "3ad514ede02e6eefc9b2ed0dceed144bdc6aafe21cab57aa6746c44190689f35"
+  },
+  {
+    "rule_id": "tls_verification_disabled",
+    "claim_type": "tls_verification_disabled",
+    "file": "app/client.py",
+    "start_line": 6,
+    "end_line": 6,
+    "message": "TLS verification is disabled with verify=False, so the connection can accept an invalid or attacker-controlled certificate.",
+    "severity_hint": "high",
+    "category_hint": "security",
+    "evidence": [
+      {
+        "file": "app/client.py",
+        "line": 6,
+        "kind": "added",
+        "text": "    return requests.get(url, verify=False)"
+      }
+    ],
+    "status": "accepted",
+    "reasons": [
+      "claim-specific evidence check passed: verify=False is required"
+    ],
+    "validator_version": "alma-evidence-gate/1.0.0",
+    "policy_sha256": "3ad514ede02e6eefc9b2ed0dceed144bdc6aafe21cab57aa6746c44190689f35"
+  }
+]
