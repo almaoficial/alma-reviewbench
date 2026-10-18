@@ -1,0 +1,14 @@
+diff --git a/app/db.py b/app/db.py
+new file mode 100644
+--- /dev/null
++++ b/app/db.py
+@@ -0,0 +1,9 @@
++import sqlite3
++
++def get_user(cursor, user_id):
++    query = f"SELECT * FROM users WHERE id = {user_id}"
++    cursor.execute(query)
++
++def get_user_safe(cursor, user_id):
++    query = "SELECT * FROM users WHERE id = ?"
++    cursor.execute(query, (user_id,))
