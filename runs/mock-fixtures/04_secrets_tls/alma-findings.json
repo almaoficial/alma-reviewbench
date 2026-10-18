@@ -1,0 +1,25 @@
+{
+  "pr": {
+    "repo": "https://github.com/example/reviewbench-fixture",
+    "pr_number": 104,
+    "base": "1111111111111111111111111111111111111111",
+    "head": "5555555555555555555555555555555555555555"
+  },
+  "agent": "alma-reviewer",
+  "findings": [
+    {
+      "file": "app/client.py",
+      "start_line": 3,
+      "end_line": 3,
+      "message": "Hardcoded credential: a secret value is embedded directly in source code, where it can leak through the repository and cannot be rotated independently.",
+      "producer": "alma-reviewer"
+    },
+    {
+      "file": "app/client.py",
+      "start_line": 6,
+      "end_line": 6,
+      "message": "TLS verification is disabled with verify=False, so the connection can accept an invalid or attacker-controlled certificate.",
+      "producer": "alma-reviewer"
+    }
+  ]
+}
