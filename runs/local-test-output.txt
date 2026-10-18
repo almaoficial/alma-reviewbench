@@ -1,0 +1,29 @@
+test_cli_backend_llm_unarmed_exits_nonzero_and_writes_nothing (test_llm_adapter.CliGuardTests.test_cli_backend_llm_unarmed_exits_nonzero_and_writes_nothing) ... ok
+test_refuses_on_http_error (test_llm_adapter.RefusalTests.test_refuses_on_http_error) ... ok
+test_refuses_on_non_json_content (test_llm_adapter.RefusalTests.test_refuses_on_non_json_content) ... ok
+test_refuses_post_call_when_reported_usage_exceeds_cap (test_llm_adapter.RefusalTests.test_refuses_post_call_when_reported_usage_exceeds_cap) ... ok
+test_refuses_preflight_when_worst_case_exceeds_cap (test_llm_adapter.RefusalTests.test_refuses_preflight_when_worst_case_exceeds_cap) ... ok
+test_refuses_with_allow_flag_not_one (test_llm_adapter.RefusalTests.test_refuses_with_allow_flag_not_one) ... ok
+test_refuses_with_non_positive_spend_cap (test_llm_adapter.RefusalTests.test_refuses_with_non_positive_spend_cap) ... ok
+test_refuses_without_allow_flag (test_llm_adapter.RefusalTests.test_refuses_without_allow_flag) ... ok
+test_refuses_without_api_key (test_llm_adapter.RefusalTests.test_refuses_without_api_key) ... ok
+test_refuses_without_base_url (test_llm_adapter.RefusalTests.test_refuses_without_base_url) ... ok
+test_refuses_without_model_in_config (test_llm_adapter.RefusalTests.test_refuses_without_model_in_config) ... ok
+test_refuses_without_spend_cap (test_llm_adapter.RefusalTests.test_refuses_without_spend_cap) ... ok
+test_settings_redaction_never_contains_key (test_llm_adapter.RefusalTests.test_settings_redaction_never_contains_key) ... ok
+test_base_arm_emits_all_parsed_candidates (test_llm_adapter.RequestAndGateTests.test_base_arm_emits_all_parsed_candidates) ... ok
+test_request_shape_and_gate_filtering_via_run_agent (test_llm_adapter.RequestAndGateTests.test_request_shape_and_gate_filtering_via_run_agent) ... ok
+test_run_agent_llm_without_flags_refuses (test_llm_adapter.RequestAndGateTests.test_run_agent_llm_without_flags_refuses) ... ok
+test_base_arm_includes_the_false_sql_candidate (test_reviewbench_agent.AgentContractTests.test_base_arm_includes_the_false_sql_candidate) ... ok
+test_cli_writes_contract_file_and_ledger (test_reviewbench_agent.AgentContractTests.test_cli_writes_contract_file_and_ledger) ... ok
+test_output_has_exact_contract_shape (test_reviewbench_agent.AgentContractTests.test_output_has_exact_contract_shape) ... ok
+test_head_line_numbers_and_added_context_kinds (test_reviewbench_agent.DiffParserTests.test_head_line_numbers_and_added_context_kinds) ... ok
+test_all_fixtures_match_expected_accept_and_reject_rules (test_reviewbench_agent.FixtureGateTests.test_all_fixtures_match_expected_accept_and_reject_rules) ... ok
+test_false_successes_are_proposed_by_base_and_filtered_by_alma (test_reviewbench_agent.FixtureGateTests.test_false_successes_are_proposed_by_base_and_filtered_by_alma) ... ok
+test_unknown_claim_fails_closed (test_reviewbench_agent.FixtureGateTests.test_unknown_claim_fails_closed) ... ok
+test_dockerfile_uses_no_argument_entrypoint (test_reviewbench_agent.StaticPackageTests.test_dockerfile_uses_no_argument_entrypoint) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.243s
+
+OK
