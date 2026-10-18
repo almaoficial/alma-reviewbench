@@ -1,0 +1,18 @@
+{
+  "pr": {
+    "repo": "https://github.com/example/reviewbench-fixture",
+    "pr_number": 102,
+    "base": "1111111111111111111111111111111111111111",
+    "head": "3333333333333333333333333333333333333333"
+  },
+  "agent": "alma-reviewer",
+  "findings": [
+    {
+      "file": "app/cache.py",
+      "start_line": 7,
+      "end_line": 8,
+      "message": "Errors are silently discarded: the bare except catches every exception and the handler only passes, hiding failures and making defects difficult to diagnose.",
+      "producer": "alma-reviewer"
+    }
+  ]
+}
