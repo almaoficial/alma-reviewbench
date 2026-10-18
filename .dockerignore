@@ -1,0 +1,10 @@
+.git
+__pycache__/
+*.py[cod]
+.pytest_cache/
+runs/
+tests/
+fixtures/
+README.md
+CONTRACT.md
+PREREGISTRO-REVIEWBENCH.md
