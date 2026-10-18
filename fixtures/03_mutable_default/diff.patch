@@ -1,0 +1,11 @@
+diff --git a/app/options.py b/app/options.py
+new file mode 100644
+--- /dev/null
++++ b/app/options.py
+@@ -0,0 +1,6 @@
++import os
++
++def build_options(tags=[]):
++    return {"tags": tags}
++
++api_key = os.getenv("BACKUP_API_KEY")
