@@ -1,0 +1,50 @@
+[
+  {
+    "rule_id": "unsafe_sql_construction",
+    "claim_type": "sql_injection",
+    "file": "app/db.py",
+    "start_line": 4,
+    "end_line": 4,
+    "message": "SQL injection risk: the query is built with string interpolation or concatenation, so untrusted values can change the SQL statement instead of being bound as parameters.",
+    "severity_hint": "high",
+    "category_hint": "security",
+    "evidence": [
+      {
+        "file": "app/db.py",
+        "line": 4,
+        "kind": "added",
+        "text": "    query = f\"SELECT * FROM users WHERE id = {user_id}\""
+      }
+    ],
+    "status": "accepted",
+    "reasons": [
+      "claim-specific evidence check passed: SQL text and an unsafe construction marker are required"
+    ],
+    "validator_version": "alma-evidence-gate/1.0.0",
+    "policy_sha256": "3ad514ede02e6eefc9b2ed0dceed144bdc6aafe21cab57aa6746c44190689f35"
+  },
+  {
+    "rule_id": "possible_sql_injection_unverified_call_site",
+    "claim_type": "sql_injection",
+    "file": "app/db.py",
+    "start_line": 9,
+    "end_line": 9,
+    "message": "Possible SQL injection: this execute call is near SQL construction, so its query may be injectable.",
+    "severity_hint": "high",
+    "category_hint": "security",
+    "evidence": [
+      {
+        "file": "app/db.py",
+        "line": 9,
+        "kind": "added",
+        "text": "    cursor.execute(query, (user_id,))"
+      }
+    ],
+    "status": "rejected",
+    "reasons": [
+      "claim-specific evidence check failed: SQL text and an unsafe construction marker are required"
+    ],
+    "validator_version": "alma-evidence-gate/1.0.0",
+    "policy_sha256": "3ad514ede02e6eefc9b2ed0dceed144bdc6aafe21cab57aa6746c44190689f35"
+  }
+]
