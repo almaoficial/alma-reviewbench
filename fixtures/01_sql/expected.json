@@ -1,0 +1,1 @@
+{"accepted_rule_ids":["unsafe_sql_construction"],"rejected_rule_ids":["possible_sql_injection_unverified_call_site"]}
