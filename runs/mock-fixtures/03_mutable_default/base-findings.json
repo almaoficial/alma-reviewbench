@@ -1,0 +1,25 @@
+{
+  "pr": {
+    "repo": "https://github.com/example/reviewbench-fixture",
+    "pr_number": 103,
+    "base": "1111111111111111111111111111111111111111",
+    "head": "4444444444444444444444444444444444444444"
+  },
+  "agent": "base-reviewer",
+  "findings": [
+    {
+      "file": "app/options.py",
+      "start_line": 3,
+      "end_line": 3,
+      "message": "Mutable default argument: the default object is created once and shared across calls, so mutations can leak state between invocations.",
+      "producer": "base-reviewer"
+    },
+    {
+      "file": "app/options.py",
+      "start_line": 6,
+      "end_line": 6,
+      "message": "Possible hardcoded credential: this assignment uses a credential-like variable name, so the value may be embedded in source code.",
+      "producer": "base-reviewer"
+    }
+  ]
+}
