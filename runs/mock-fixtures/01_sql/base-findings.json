@@ -1,0 +1,25 @@
+{
+  "pr": {
+    "repo": "https://github.com/example/reviewbench-fixture",
+    "pr_number": 101,
+    "base": "1111111111111111111111111111111111111111",
+    "head": "2222222222222222222222222222222222222222"
+  },
+  "agent": "base-reviewer",
+  "findings": [
+    {
+      "file": "app/db.py",
+      "start_line": 4,
+      "end_line": 4,
+      "message": "SQL injection risk: the query is built with string interpolation or concatenation, so untrusted values can change the SQL statement instead of being bound as parameters.",
+      "producer": "base-reviewer"
+    },
+    {
+      "file": "app/db.py",
+      "start_line": 9,
+      "end_line": 9,
+      "message": "Possible SQL injection: this execute call is near SQL construction, so its query may be injectable.",
+      "producer": "base-reviewer"
+    }
+  ]
+}
