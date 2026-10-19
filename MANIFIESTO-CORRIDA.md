@@ -14,7 +14,7 @@ publica junto a este manifiesto, nunca suelto.
 |---|---|
 | Plataforma / juez | ReviewBench — golden set validado por ingenieros senior; severidad y categoría las asigna el clasificador de la plataforma |
 | Reviewer | `alma-reviewer` (registrado 2026-10-18, estado: *awaiting approval* del mantenedor) |
-| Imagen (digest) | `ghcr.io/almaoficial/alma-reviewbench@sha256:51b18cf15224022b668a8db8845bd4db5a8a85ffb64a0ead0d8d7130ed71f4b2` — pública, linux/amd64, construida por GitHub Actions (corrida nº 1 del workflow, 2026-10-18) |
+| Imagen (digest) | `ghcr.io/almaoficial/alma-reviewbench@sha256:14a4bb3ed9b3f83bbdb7947fc1cba949cece2cb0f97c1d9cc8b22ca0fd6d5d3b` — pública, linux/amd64, construida por GitHub Actions (corrida nº 2 del workflow, 2026-10-19; la nº 1 publicó el digest anterior, reemplazado tras corregir el payload del agente: los modelos de razonamiento de OpenAI rechazaban `temperature` y `max_tokens` con HTTP 400 y las corridas #241–#250 murieron sin puntaje) |
 | Repositorio | https://github.com/almaoficial/alma-reviewbench |
 | Modelo | `gpt-5.6-sol`, effort `medium`, vía `https://api.openai.com/v1` |
 | Egress del contenedor | solo `api.openai.com:443` |
@@ -42,8 +42,8 @@ imagen, mismo registro, dos configuraciones).
   (pre-registro: `PREREGISTRO-REVIEWBENCH.md`, congelado antes de correr).
 - **Regla de avance a la final (219 PRs × 3):** F1 ALMA ≥ base, precisión
   ALMA ≥ base + 0,05, recall ALMA no cae más de 0,03.
-- **Estado:** PENDIENTE — espera la aprobación del mantenedor y la carga de
-  credenciales.
+- **Estado:** EN CURSO — registro aprobado (PR #89 fusionado el 2026-10-19);
+  brazo base COMPLETO (corrida #251); brazo ALMA en curso (corrida #252).
 
 ## Resultados
 
@@ -52,8 +52,8 @@ tabla y en el JSON. Hasta entonces: sin número, sin historia.)*
 
 | Brazo | Grounded F1 | Precisión | Recall | Gasto real |
 |---|---|---|---|---|
-| base | — | — | — | — |
-| ALMA | — | — | — | — |
+| base (corrida #251, 2026-10-19) | 1,4% | 42,9% | 0,7% | pendiente de lectura de Usage |
+| ALMA (corrida #252, 2026-10-19) | en curso | en curso | en curso | en curso |
 
 ## Nota de diseño
 

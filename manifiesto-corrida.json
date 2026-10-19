@@ -1,1 +1,110 @@
-{"agent":{"built_by":"GitHub Actions, workflow reviewbench-image, corrida nº 1 (2026-10-18, SUCCESS)","contact_email":"alesalusso10@gmail.com","entrypoint":"sin argumentos; un contenedor fresco por PR; salida JSON de findings en $RB_OUT según CONTRACT.md","image":"ghcr.io/almaoficial/alma-reviewbench@sha256:51b18cf15224022b668a8db8845bd4db5a8a85ffb64a0ead0d8d7130ed71f4b2","image_visibility":"public","platform_arch":"linux/amd64","repository":"https://github.com/almaoficial/alma-reviewbench","reviewer_name":"alma-reviewer"},"comparison":{"invalid_if":"cualquier otro campo del sobre difiere entre brazos o entre corridas comparadas","shared_fields":["agent.image","model.api_base_url","model.model","model.effort","model.timeout_seconds_per_pr","model.egress_allowlist","run.dataset"],"single_differing_field":"governance"},"configurations":[{"gate":"bypassed (brazo base: el revisor emite sin pasar por la puerta de evidencia)","labels":{"backend":"llm","effort":"medium","governance":"base","model":"gpt-5.6-sol"},"leaderboard_row_id":"alma-reviewer-llm-base-gpt-5-6-sol-medium"},{"gate":"active (brazo ALMA: todo finding pasa por la puerta de evidencia congelada antes de emitirse)","labels":{"backend":"llm","effort":"medium","governance":"alma","model":"gpt-5.6-sol"},"leaderboard_row_id":"alma-reviewer-llm-alma-gpt-5-6-sol-medium"}],"experiment":{"advancement_rule_to_final":"F1 ALMA >= F1 base, precision ALMA >= precision base + 0.05, recall ALMA no cae mas de 0.03","coprimary_metric":"grounded precision","preregistration":"PREREGISTRO-REVIEWBENCH.md (congelado antes de cualquier corrida puntuada)","primary_metric":"grounded F1"},"gate_policy":{"mode":"fail-closed; la puerta no mejora el recall por diseño: solo filtra findings sin evidencia verificable en el diff","policy_sha256":"3ad514ede02e6eefc9b2ed0dceed144bdc6aafe21cab57aa6746c44190689f35","validator_version":"alma-evidence-gate/1.0.0"},"manifest_version":"run-manifest/1.0.0","model":{"api_base_url":"https://api.openai.com/v1","effort":"medium","egress_allowlist":["api.openai.com:443"],"model":"gpt-5.6-sol","timeout_seconds_per_pr":1800},"platform":{"judge":"golden set de ReviewBench validado por ingenieros senior; severidad y categoría las asigna el clasificador de la plataforma, no el agente","name":"ReviewBench","registration_state":"awaiting approval (review request de onboarding abierta el 2026-10-18; las corridas se habilitan con el merge de un mantenedor)","url":"https://review-bench.ai"},"purpose":"Sobre completo de la corrida A/B de ReviewBench. Regla de comparación: si dos corridas difieren en cualquier campo de este manifiesto fuera de `comparison.single_differing_field`, la comparación queda rechazada de plano.","registered_at":"2026-10-18","run":{"dataset":"set privado de 25 PRs de ReviewBench (detalle por PR visible solo para el dueño del agente)","kind":"practice (test puntuado del portal)","results":{"alma":{"grounded_f1":null,"grounded_precision":null,"grounded_recall":null,"spend_usd":null},"base":{"grounded_f1":null,"grounded_precision":null,"grounded_recall":null,"spend_usd":null}},"results_note":"Los resultados se asientan acá verbatim desde el portal al completarse la práctica, y este manifiesto se publica junto al número.","runs_per_configuration":1,"status":"PENDING — espera aprobación del mantenedor y carga de credenciales"},"spend_controls":{"approved_by":"Alejandro, 2026-10-18 (compuertas B y C)","per_pr_cap_usd":5.0,"practice_envelope_cap_usd":40,"real_llm_requires":"ALLOW_REAL_LLM=1 y RB_MAX_SPEND_USD positivo; sin ambos, el adaptador se niega a llamar"}}
+{
+ "agent": {
+  "built_by": "GitHub Actions, workflow reviewbench-image, corrida nº 2 (2026-10-19, SUCCESS); la nº 1 (2026-10-18) publicó el digest anterior, reemplazado tras el fix del payload",
+  "contact_email": "alesalusso10@gmail.com",
+  "entrypoint": "sin argumentos; un contenedor fresco por PR; salida JSON de findings en $RB_OUT según CONTRACT.md",
+  "image": "ghcr.io/almaoficial/alma-reviewbench@sha256:14a4bb3ed9b3f83bbdb7947fc1cba949cece2cb0f97c1d9cc8b22ca0fd6d5d3b",
+  "image_visibility": "public",
+  "platform_arch": "linux/amd64",
+  "repository": "https://github.com/almaoficial/alma-reviewbench",
+  "reviewer_name": "alma-reviewer"
+ },
+ "comparison": {
+  "invalid_if": "cualquier otro campo del sobre difiere entre brazos o entre corridas comparadas",
+  "shared_fields": [
+   "agent.image",
+   "model.api_base_url",
+   "model.model",
+   "model.effort",
+   "model.timeout_seconds_per_pr",
+   "model.egress_allowlist",
+   "run.dataset"
+  ],
+  "single_differing_field": "governance"
+ },
+ "configurations": [
+  {
+   "gate": "bypassed (brazo base: el revisor emite sin pasar por la puerta de evidencia)",
+   "labels": {
+    "backend": "llm",
+    "effort": "medium",
+    "governance": "base",
+    "model": "gpt-5.6-sol"
+   },
+   "leaderboard_row_id": "alma-reviewer-llm-base-gpt-5-6-sol-medium"
+  },
+  {
+   "gate": "active (brazo ALMA: todo finding pasa por la puerta de evidencia congelada antes de emitirse)",
+   "labels": {
+    "backend": "llm",
+    "effort": "medium",
+    "governance": "alma",
+    "model": "gpt-5.6-sol"
+   },
+   "leaderboard_row_id": "alma-reviewer-llm-alma-gpt-5-6-sol-medium"
+  }
+ ],
+ "experiment": {
+  "advancement_rule_to_final": "F1 ALMA >= F1 base, precision ALMA >= precision base + 0.05, recall ALMA no cae mas de 0.03",
+  "coprimary_metric": "grounded precision",
+  "preregistration": "PREREGISTRO-REVIEWBENCH.md (congelado antes de cualquier corrida puntuada)",
+  "primary_metric": "grounded F1"
+ },
+ "gate_policy": {
+  "mode": "fail-closed; la puerta no mejora el recall por diseño: solo filtra findings sin evidencia verificable en el diff",
+  "policy_sha256": "3ad514ede02e6eefc9b2ed0dceed144bdc6aafe21cab57aa6746c44190689f35",
+  "validator_version": "alma-evidence-gate/1.0.0"
+ },
+ "manifest_version": "run-manifest/1.0.0",
+ "model": {
+  "api_base_url": "https://api.openai.com/v1",
+  "effort": "medium",
+  "egress_allowlist": [
+   "api.openai.com:443"
+  ],
+  "model": "gpt-5.6-sol",
+  "timeout_seconds_per_pr": 1800
+ },
+ "platform": {
+  "judge": "golden set de ReviewBench validado por ingenieros senior; severidad y categoría las asigna el clasificador de la plataforma, no el agente",
+  "name": "ReviewBench",
+  "registration_state": "aprobado: PR #89 fusionado por el mantenedor el 2026-10-19",
+  "url": "https://review-bench.ai"
+ },
+ "purpose": "Sobre completo de la corrida A/B de ReviewBench. Regla de comparación: si dos corridas difieren en cualquier campo de este manifiesto fuera de `comparison.single_differing_field`, la comparación queda rechazada de plano.",
+ "registered_at": "2026-10-18",
+ "run": {
+  "dataset": "set privado de 25 PRs de ReviewBench (detalle por PR visible solo para el dueño del agente)",
+  "kind": "practice (test puntuado del portal)",
+  "results": {
+   "alma": {
+    "grounded_f1": null,
+    "grounded_precision": null,
+    "grounded_recall": null,
+    "spend_usd": null
+   },
+   "base": {
+    "grounded_f1": 0.014,
+    "grounded_precision": 0.429,
+    "grounded_recall": 0.007,
+    "spend_usd": null,
+    "run_id": 251,
+    "augmented_f1": 0.044,
+    "augmented_precision": 0.533,
+    "augmented_recall": 0.023,
+    "findings": "14 (5 novel)",
+    "completed_at": "2026-10-19"
+   }
+  },
+  "results_note": "Los resultados se asientan acá verbatim desde el portal al completarse la práctica, y este manifiesto se publica junto al número.",
+  "runs_per_configuration": 1,
+  "status": "PENDING — espera aprobación del mantenedor y carga de credenciales"
+ },
+ "spend_controls": {
+  "approved_by": "Alejandro, 2026-10-18 (compuertas B y C)",
+  "per_pr_cap_usd": 5.0,
+  "practice_envelope_cap_usd": 40,
+  "real_llm_requires": "ALLOW_REAL_LLM=1 y RB_MAX_SPEND_USD positivo; sin ambos, el adaptador se niega a llamar"
+ },
+ "status": "EN CURSO — brazo base COMPLETO (corrida #251, primera base válida según la regla pre-comprometida); brazo alma lanzado el 2026-10-19, resultado pendiente"
+}
