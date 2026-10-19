@@ -281,10 +281,15 @@ class LLMReviewer:
         return cls(LLMSettings.from_env(env, config), transport=transport)
 
     def build_payload(self, diff_text: str) -> dict[str, object]:
+        # No "temperature" and no "max_tokens": OpenAI reasoning models
+        # (GPT-5 family) reject both with HTTP 400 — every ReviewBench
+        # practice run on 2026-10-19 (#241-#250) died of exactly this,
+        # before billing a single token. The output cap for these
+        # models is "max_completion_tokens". Determinism for the
+        # experiment comes from the frozen gate, not from temperature.
         payload: dict[str, object] = {
             "model": self.settings.model,
-            "temperature": 0,
-            "max_tokens": self.settings.max_output_tokens,
+            "max_completion_tokens": self.settings.max_output_tokens,
             "response_format": {"type": "json_object"},
             "messages": [
                 {"role": "system", "content": _SYSTEM_PROMPT},
@@ -328,9 +333,15 @@ class LLMReviewer:
             settings.timeout_seconds,
         )
         if status != 200:
+            # Include a bounded excerpt of the error body: on 2026-10-19
+            # the bare "HTTP 400" line (without the body's reason) cost
+            # an afternoon of misdiagnosis. Error bodies name the
+            # rejected parameter; they never contain the API key.
+            excerpt = " ".join(body.decode("utf-8", errors="replace").split())[:400]
+            detail = f" — body: {excerpt}" if excerpt else ""
             raise RealLLMRefused(
                 f"model endpoint returned HTTP {status}; "
-                "failing closed without emitting findings"
+                f"failing closed without emitting findings{detail}"
             )
         try:
             response = json.loads(body.decode("utf-8"))
