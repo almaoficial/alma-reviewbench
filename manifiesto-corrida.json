@@ -81,7 +81,11 @@
     "grounded_f1": null,
     "grounded_precision": null,
     "grounded_recall": null,
-    "spend_usd": null
+    "spend_usd": null,
+    "run_id": 253,
+    "findings": "1 emitido en 25 PRs (desde la salida del agente)",
+    "completed_at": "2026-10-19",
+    "note": "El agente completó 25/25 PRs; la plataforma falló en su propio paso de puntaje (score / Summarise) y no produjo nota oficial. Medido desde las salidas: la puerta emitió 1 finding contra 14 del brazo base."
    },
    "base": {
     "grounded_f1": 0.014,
@@ -106,5 +110,5 @@
   "practice_envelope_cap_usd": 40,
   "real_llm_requires": "ALLOW_REAL_LLM=1 y RB_MAX_SPEND_USD positivo; sin ambos, el adaptador se niega a llamar"
  },
- "status": "EN CURSO — brazo base COMPLETO (corrida #251, primera base válida según la regla pre-comprometida); brazo alma lanzado el 2026-10-19, resultado pendiente"
+ "status": "CERRADO (v1) — regla de avance NO cumplida: la final de 219x3 no se abre. Sigue el pre-registro v2 (PREREGISTRO-REVIEWBENCH-V2.md): revisor por clases verificables con contexto completo, misma puerta congelada."
 }

@@ -53,7 +53,7 @@ tabla y en el JSON. Hasta entonces: sin número, sin historia.)*
 | Brazo | Grounded F1 | Precisión | Recall | Gasto real |
 |---|---|---|---|---|
 | base (corrida #251, 2026-10-19) | 1,4% | 42,9% | 0,7% | pendiente de lectura de Usage |
-| ALMA (corrida #252, 2026-10-19) | en curso | en curso | en curso | en curso |
+| ALMA (corrida #253, 2026-10-19) | sin nota oficial — la plataforma falló en su paso de puntaje con el agente 25/25 completo; medido desde las salidas: **1 finding emitido** contra 14 del base → regla de avance NO cumplida, la final no se abre | — | — | pendiente de lectura de Usage |
 
 ## Nota de diseño
 
