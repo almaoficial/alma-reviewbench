@@ -4,11 +4,26 @@ Este directorio contiene un adaptador local **US$0 por defecto** para
 probar a ALMA como capa de gobernanza sobre un revisor de código de
 ReviewBench, el benchmark público de GitHub para agentes de code review.
 
-**Estado al 2026-10-18:** paquete construido y testeado localmente
-(24/24 tests). Incluye el backend LLM real implementado pero **desarmado**
-(fail-closed, ver abajo). No se registró ningún agente, no se cargó
-ninguna API key, no se hizo ninguna llamada a un modelo real y no se
-publicó ninguna imagen.
+**Estado al 2026-10-19 (v1 CERRADA):** el agente `alma-reviewer` fue
+registrado y **aprobado** — el mantenedor fusionó el PR #89 el 2026-10-19 —
+y la imagen se publicó en GHCR por digest
+(`ghcr.io/almaoficial/alma-reviewbench@sha256:14a4bb3ed9b3f83bbdb7947fc1cba949cece2cb0f97c1d9cc8b22ca0fd6d5d3b`).
+La práctica puntuada del portal (set privado de 25 PRs) ya se corrió contra
+el modelo real, con el sobre completo en
+[MANIFIESTO-CORRIDA.md](MANIFIESTO-CORRIDA.md):
+
+- **Brazo base (corrida #251):** grounded **F1 1,4%** · precisión 42,9% ·
+  recall 0,7% (augmented F1 4,4%); 14 findings, 5 novel.
+- **Brazo ALMA (corrida #253):** el agente completó 25/25 PRs y la puerta
+  emitió **1 finding**; la plataforma falló en su propio paso de puntaje
+  (score / Summarise) y no produjo nota oficial.
+
+**Veredicto v1:** la regla de avance pre-registrada (F1 ALMA ≥ base,
+precisión ALMA ≥ base + 0,05, recall ALMA no cae más de 0,03) **no se
+cumplió** → la corrida final de 219 × 3 **no se abre**. Sigue el
+pre-registro v2 (`PREREGISTRO-REVIEWBENCH-V2.md`), en curso. El paquete
+local sigue siendo US$0 por defecto (mock-first) y el backend LLM sigue
+siendo fail-closed fuera del portal.
 
 ## Qué hace
 
@@ -39,8 +54,9 @@ El **backend** también es intercambiable sin tocar la puerta:
   niega a llamar si falta cualquiera de `ALLOW_REAL_LLM=1`, la API key por
   entorno, `RB_MODEL_BASE_URL`, el modelo configurado o un
   `RB_MAX_SPEND_USD` positivo; y controla el tope antes y después de la
-  llamada. Está probado offline con HTTP mockeado (`tests/test_llm_adapter.py`);
-  nunca corrió contra un modelo real.
+  llamada. Está probado offline con HTTP mockeado (`tests/test_llm_adapter.py`)
+  y corrió contra el modelo real por primera vez el 2026-10-19, en la
+  práctica puntuada del portal (corridas #251 y #253; ver el manifiesto).
 
 ## Contrato implementado
 
@@ -106,16 +122,20 @@ docker build --platform linux/amd64 \
 ```
 
 Este entorno no tiene Docker disponible (verificado el 2026-10-18:
-tampoco podman/buildah/nerdctl/kaniko), así que la imagen **no** fue
-construida ni corrida aquí; el Dockerfile está cubierto por test estático y
+tampoco podman/buildah/nerdctl/kaniko), así que la imagen **no** se
+construyó localmente; el Dockerfile está cubierto por test estático y
 el entrypoint sin argumentos se validó contra los 4 fixtures en ambos
 brazos, con salida `$RB_OUT` conforme al contrato (evidencia en
-`runs/entrypoint-sim-output.txt`). El camino de construcción sin Docker
-local es GitHub Actions: `workflows/reviewbench-image.yml` (solo disparo
-manual) construye `linux/amd64`, publica en
-`ghcr.io/almaoficial/alma-reviewbench` y emite el digest — ver
-`workflows/README.md`. La validación pendiente con el runner oficial,
-desde un clon de `review-bench/ReviewBench`, es:
+`runs/entrypoint-sim-output.txt`). La construcción real se hizo por
+GitHub Actions: `workflows/reviewbench-image.yml` (solo disparo manual)
+construyó `linux/amd64` y publicó en GHCR — la corrida nº 2 del workflow
+(2026-10-19, SUCCESS) emitió el digest vigente,
+`ghcr.io/almaoficial/alma-reviewbench@sha256:14a4bb3ed9b3f83bbdb7947fc1cba949cece2cb0f97c1d9cc8b22ca0fd6d5d3b`
+(la nº 1 había publicado el digest anterior, reemplazado tras corregir el
+payload del agente) — ver `workflows/README.md`. Esa imagen es la que el
+portal ejecutó en la práctica puntuada (#251 y #253), que es la validación
+de punta a punta asentada en el manifiesto. La validación local con el
+runner oficial, desde un clon de `review-bench/ReviewBench`, sigue siendo:
 
 ```bash
 scripts/try-agent.sh ghcr.io/almaoficial/alma-reviewbench:dev --pr 0
@@ -126,27 +146,29 @@ mock no hace falta pasar ninguna key. Si en el futuro se usa un backend LLM,
 la key se pasa solo por entorno al runner local (por ejemplo
 `-e OPENAI_API_KEY`) y jamás se escribe en el repo ni en los findings.
 
-## Qué falta para el registro real
+## Estado de las compuertas
 
-El formulario completo, prellenado salvo digest y credenciales, está en
-[REGISTRO-REVIEWBENCH.md](REGISTRO-REVIEWBENCH.md). En síntesis, cuatro
-compuertas en orden, cada una con el sí de Alejandro:
+El formulario completo está en
+[REGISTRO-REVIEWBENCH.md](REGISTRO-REVIEWBENCH.md) y el sobre de la
+corrida en [MANIFIESTO-CORRIDA.md](MANIFIESTO-CORRIDA.md). Las cuatro
+compuertas, en el orden en que se cruzaron (cada una con el sí de
+Alejandro):
 
-1. **A — Publicar la imagen en GHCR** con el workflow manual de
-   `workflows/` y obtener el digest `sha256` (costo US$0; el código se
-   hace público).
-2. Registrar en el portal **por digest**, con las dos configuraciones A/B
-   sobre el mismo registro (`governance=base|alma`, `backend=llm`,
-   `model=gpt-5.6-sol`, `effort=medium`) y esperar el merge del mantenedor.
-3. **B — Cargar la API key** en el portal (él o por bóveda segura, nunca
-   por chat) y declarar `ALLOW_REAL_LLM=1` y `RB_MAX_SPEND_USD`.
-4. **C — Test run puntuado de 25 PRs (A/B)** con tope de gasto nombrado
-   (bandas: intermedia US$3–21; frontier US$15–105), y solo si se cumple
-   la regla de avance del pre-registro, **D — corrida final 219 × 3**.
-
-Hueco práctico que persiste: el portal está orientado a revisores con
-modelo; las configuraciones LLM de arriba declaran URL y secreto, pero la
-aceptación final la confirma el mantenedor al mergear el manifiesto.
+1. **A — Imagen publicada en GHCR** ✓ (workflow manual de `workflows/`;
+   digest vigente emitido por la corrida nº 2, 2026-10-19).
+2. **Registro aprobado** ✓ — el portal registró por digest las dos
+   configuraciones A/B sobre el mismo registro (`governance=base|alma`,
+   `backend=llm`, `model=gpt-5.6-sol`, `effort=medium`) y el mantenedor
+   fusionó el PR #89 el 2026-10-19.
+3. **B y C — Credenciales cargadas y práctica puntuada corrida** ✓
+   (2026-10-19): brazo base #251 con nota oficial (grounded F1 1,4%);
+   brazo ALMA #253 con el agente completo y sin nota oficial por una
+   falla de la plataforma en su paso de puntaje.
+4. **D — Corrida final 219 × 3: NO se abre.** La regla de avance del
+   pre-registro no se cumplió; relanzar la misma corrida está prohibido
+   por la propia declaración anti-pesca del experimento. Lo que sigue es
+   el pre-registro v2 (`PREREGISTRO-REVIEWBENCH-V2.md`): revisor por
+   clases verificables con contexto completo, misma puerta congelada.
 
 ## Estructura
 
@@ -174,5 +196,9 @@ Dockerfile   imagen linux/amd64, entrypoint sin argumentos
   contrato; no es competitivo como revisor de producción.
 - La puerta mejora precisión solo si el base genera falsos positivos
   filtrables. No mejora el recall de defectos nunca propuestos.
-- El puntaje real, la práctica puntuada del portal y la corrida completa
-  siguen sin ejecutar: requieren los pasos y aprobaciones de arriba.
+- La práctica puntuada ya se ejecutó (2026-10-19) y su puntaje es el de
+  arriba: bajo en el brazo base (grounded F1 1,4%) y sin nota oficial en
+  el brazo ALMA por la falla de puntaje de la plataforma. La corrida
+  completa (219 × 3) no se ejecutó ni quedó autorizada: la regla de
+  avance no se cumplió, y ese no es un trámite pendiente sino el
+  veredicto de la v1.
