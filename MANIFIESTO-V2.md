@@ -15,7 +15,7 @@ publica junto a este manifiesto, nunca suelto.
 |---|---|
 | Plataforma / juez | ReviewBench — golden set validado por ingenieros senior; severidad y categoría las asigna el clasificador de la plataforma |
 | Reviewer | `alma-reviewer` (registrado 2026-10-18, aprobado 2026-10-19) |
-| Imagen (digest) | `ghcr.io/almaoficial/alma-reviewbench@sha256:f2da937c2fa4a0e3cbdf3dae09c821419f34920cf4ab3394fc2cc226` — pública, linux/amd64, construida por GitHub Actions (corrida nº 3 del workflow, 2026-10-21; tag `dev`, desde el commit `8eeacb7` de `main`) |
+| Imagen (digest) | `ghcr.io/almaoficial/alma-reviewbench@sha256:f2da937c2fa4a0e3cbdf3dae09c821419f34920cf4ab3394fc2cc226e695d5e6` — pública, linux/amd64, construida por GitHub Actions (corrida nº 3 del workflow, 2026-10-21; tag `dev`, desde el commit `8eeacb7` de `main`) |
 | Repositorio | https://github.com/almaoficial/alma-reviewbench |
 | Modelo | `gpt-5.6-sol`, effort `medium`, vía `https://api.openai.com/v1` |
 | Egress del contenedor | solo `api.openai.com:443` |
@@ -46,10 +46,9 @@ idéntico por construcción (misma imagen, mismo registro, dos configuraciones).
 - **Prueba de la linterna (independiente de la regla):** el recall del brazo
   base-v2 debe superar el 0,7% de la v1; si no, la hipótesis 2 queda falsada
   aunque el A/B «gane» por precisión.
-- **Estado:** imagen v2 por publicar (workflow manual); práctica **sin
-  lanzar** — requiere el «sí» de Alejandro al momento de lanzar (§7.3) y el
-  freno de la bóveda del portal actualizado a 6.50 (acción suya, declarada
-  en este manifiesto).
+- **Estado:** imagen v2 publicada y manifiesto asentado; configuraciones
+  del portal en actualización a la v2; práctica pendiente del freno en
+  US$6,50.
 
 ## Semáforo previo (2026-10-21)
 
