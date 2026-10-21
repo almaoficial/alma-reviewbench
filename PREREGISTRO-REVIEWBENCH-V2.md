@@ -114,3 +114,30 @@ Si ninguna de las dos se cumple en la práctica de la v2, la v2 se registra como
 **Lo que NO cambia:** el tope duro del semáforo sigue en **US$20 totales**; la regla de avance queda intacta; las puertas siguen congeladas (la 1.3.0 corre con POLICY_SHA256 `0a711435adb3bc449da5d2b410f6511b7b70de7be5e55604ffca2e1946eddf78`). El techo por PR sube; no desaparece.
 
 **Saldo verificado antes de correr:** US$1,85 en la cuenta correcta (Billing de OpenAI, cuenta «Continue with Apple», verificado en pantalla el 21/10 13:23 EDT; clave activa «Reviewbench») + carga de US$20 confirmada por Alejandro («Tenemos 21 dólares de tokens») → saldo ≈US$21,85, por encima del tope duro del semáforo.
+
+## Adenda 5 — Excepción de infraestructura: relanzamiento del brazo base (2026-10-21)
+
+La corrida base nº 282 (21/10/2026, 14:35:38 EDT; configuración llm · base · gpt-5.6-sol · medium · v2 · v13; imagen sha256:f2da937c…e695d5e6) terminó FAILED en la plataforma con el detalle «failed at run-agent (3, 4) / Run the vendor agent over this shard», SIN producir puntajes (precisión, recall y F1 en «–»): la corrida NO completó la fase del agente por una falla de ejecución del portal, ajena al código medido.
+
+Bajo la regla vigente de este pre-registro — «la primera corrida que COMPLETA en cada brazo es la que cuenta» — y el precedente declarado del semáforo (los casos cortados por infraestructura se re-corren, con la causa asentada), Alejandro autorizó el 21/10/2026 (15:58 EDT) UN relanzamiento del brazo base, bajo estas condiciones:
+
+1. Misma configuración, misma imagen, mismos labels; ningún cambio de código, puerta o parámetro.
+2. Es el único relanzamiento: si también falla a nivel de plataforma, la práctica v2 se cierra SIN medición y no hay tercer intento.
+3. La corrida que cuenta es la primera que complete; la nº 282 queda asentada como intento fallido por infraestructura, no como resultado.
+4. La secuencia posterior no cambia: puntaje base → prueba de la linterna → brazo ALMA → regla de avance.
+
+## Adenda 6 — Diagnóstico de las caídas run-agent y decisión de diseño (2026-10-21)
+
+**Causa raíz (leída de los logs descargados del portal, corridas #282 y #287):** el agente se negó a correr. Su guardia de pre-vuelo (`llm_reviewer_v2.py`, guarda sobre TODAS las pasadas) estimó el peor caso por PR entre US$8,3653 y US$97,2068 (20 pasadas: 19 clases + general, contexto completo en cada una) contra `RB_MAX_SPEND_USD` = US$***00 según el log (enmascarado; el valor asentado termina en «00» — el 6,50 de la Adenda 4 no quedó registrado, y no habría alcanzado: la estimación mínima ya lo supera). Resultado por PR: `error:2`, «no model call was made»; el portal reintentó 3 veces por PR y marcó el paso `run-agent` como fallado. La plataforma ejecutó correctamente en ambas corridas.
+
+**Corrección del diagnóstico previo:** la lectura «inestabilidad de la plataforma» era ERRADA. El historial completo (11 de 12 corridas fallidas desde el 19/10, incluidas las de la v1 con imágenes anteriores) es esta misma guardia actuando según el tamaño del primer PR de cada fragmento — determinista por tamaño, con apariencia de azar por el orden de los fragmentos. La #251 completó porque sus 25 PRs quedaron bajo el freno de la v1 (una pasada). El semáforo no cazó el problema porque sus PRs sintéticos son miniatura (estimaciones en centavos).
+
+**El dato económico (mismo PR, cmik_apilix_12):** v1 real = US$0,86 en 1 pasada (41.160 tokens de prompt); v2 estima US$36,80 en 20 pasadas. Conclusión: el diseño de 20 pasadas con contexto completo es inviable en costo sobre PRs reales — la práctica superaría el tope congelado de US$30 y el saldo disponible (~US$19,10) aunque el freno se elevara. El freno no es el problema: es el mensajero.
+
+**Decisión de diseño que se abre (las puertas 1.x NO se tocan; el componente que evoluciona es el revisor):**
+- C1 — Una pasada, 19 clases: una sola llamada por PR con las 19 clases en secciones y la misma disciplina de cita exacta de la v2. Costo estimado por PR ≈ el de la v1 (US$0,86 medido) con salida mayor. Riesgo: que la detección por clase se diluya (era el modo de falla de la v1, aunque sin esta disciplina de cita).
+- C2 — Triage + pasadas profundas: una pasada barata solo sobre el diff marca clases candidatas (≤5); las pasadas profundas corren solo para esas, con el archivo. Costo estimado: triage ~US$0,10–0,30 + hasta 5 pasadas profundas. Riesgo: el triage puede no marcar una clase presente (pérdida de recall medible).
+- C3 — 20 pasadas con contexto recortado: cada pasada recibe el hunk del diff y la región citada, no el archivo entero. Riesgo: defectos cuya evidencia vive fuera del diff.
+- C4 — DESCARTADA con números: solo elevar el freno (~US$120) y fondear. La práctica costaría un orden de magnitud más que el tope y la final (219×3) sería infinanciable; no resuelve el diseño.
+
+**Regla desde esta adenda:** ninguna corrida nueva hasta que (a) Alejandro elija el rediseño, (b) exista el papel del revisor nuevo (v2.1) con su pre-registro, y (c) el semáforo se re-corra en verde con la batería congelada. La práctica v2 queda en pausa por diseño, no por cierre: el veredicto «ALMA mejora» sigue pendiente de medición.
