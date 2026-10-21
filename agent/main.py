@@ -29,6 +29,7 @@ from .diff_parser import parse_unified_diff
 from .llm_reviewer import LLMReviewer, RealLLMRefused
 from .llm_reviewer_v2 import LLMReviewerV2
 from .llm_reviewer_v21 import LLMReviewerV21
+from .llm_reviewer_v22 import LLMReviewerV22
 
 
 # Backwards-compatible name: the mock-first package raised this when
@@ -168,7 +169,12 @@ def run_agent(
         # PREREGISTRO-REVIEWBENCH-V2.md; "v21" is the single-pass
         # full-context reviewer of PREREGISTRO-REVIEWBENCH-V21.md
         # (design C1 of Adenda 6: the v2's per-class language in ONE
-        # call, so the pre-flight guard estimates one pass, not twenty).
+        # call, so the pre-flight guard estimates one pass, not twenty);
+        # "v22" is the triage + deep-pass reviewer of
+        # PREREGISTRO-REVIEWBENCH-V22.md (design C2: a selection pass
+        # over the diff alone marks <=5 classes, the v2's deep passes
+        # run only for those, and a pre-registered degradation rule
+        # replaces the v2 guard's blanket refusal).
         # All of them feed the identical gate.
         effective_env = dict(os.environ) if env is None else env
         reviewer_version = (config.get("reviewer") or "v1").strip().lower()
@@ -215,10 +221,27 @@ def run_agent(
                     or "/work/repo"
                 ),
             )
+        elif reviewer_version == "v22":
+            reviewer = LLMReviewerV22.from_env(
+                effective_env,
+                config,
+                transport=llm_transport,
+            )
+            candidates = reviewer.review(
+                diff_text=diff_text,
+                diff=diff,
+                config=config,
+                mode=mode,
+                repo_root=(
+                    config.get("repo_root")
+                    or effective_env.get("RB_REPO_ROOT")
+                    or "/work/repo"
+                ),
+            )
         else:
             raise ValueError(
                 f"unknown reviewer version {reviewer_version!r}; "
-                "expected 'v1', 'v2' or 'v21' (RB_CONFIG_REVIEWER)"
+                "expected 'v1', 'v2', 'v21' or 'v22' (RB_CONFIG_REVIEWER)"
             )
         if reviewer.last_run_info is not None:
             llm_run_info = reviewer.last_run_info.to_dict()
