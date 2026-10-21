@@ -1,0 +1,17 @@
+{
+  "passes": {
+    "debug_mode_enabled": [
+      {
+        "file": "app/server.py",
+        "start_line": 6,
+        "end_line": 6,
+        "claim_type": "debug_mode_enabled",
+        "message": "Flask debug mode enabled with the literal debug=True.",
+        "evidence": [
+          "    app.run(host=\"0.0.0.0\", debug=True)"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

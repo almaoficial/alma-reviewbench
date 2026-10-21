@@ -1,0 +1,18 @@
+{
+  "passes": {
+    "race_condition": [
+      {
+        "file": "app/session_cache.py",
+        "start_line": 2,
+        "end_line": 3,
+        "claim_type": "race_condition",
+        "message": "Async refresh assigns shared session state (self.token) with no synchronization; cited together per the citation guidance.",
+        "evidence": [
+          "    async def refresh(self):",
+          "        self.token = await fetch_token()"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

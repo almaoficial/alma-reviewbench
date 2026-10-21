@@ -1,0 +1,9 @@
+{
+  "base": "1111111111111111111111111111111111111111",
+  "body": "Local v11 fixture. No network or model call.",
+  "head": "2222222222222222222222222222222222222222",
+  "nwo": "example/reviewbench-fixture",
+  "pr_number": 303,
+  "repo": "https://github.com/example/reviewbench-fixture",
+  "title": "Synthetic v11 unsafe_xml_parsing fixture"
+}

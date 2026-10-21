@@ -1,0 +1,10 @@
+diff --git a/app/unpack.py b/app/unpack.py
+new file mode 100644
+--- /dev/null
++++ b/app/unpack.py
+@@ -0,0 +1,5 @@
++import tarfile
++
++def unpack(uploaded):
++    with tarfile.open(uploaded, "r:gz") as tar:
++        tar.extractall(path="/var/app/data")

@@ -1,0 +1,5 @@
+def find_user(conn, name):
+    query = (
+        "SELECT * FROM users WHERE name = '" + name + "'"
+    )
+    return conn.execute(query)

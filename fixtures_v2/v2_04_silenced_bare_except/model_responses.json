@@ -1,0 +1,18 @@
+{
+  "passes": {
+    "silenced_bare_except": [
+      {
+        "file": "app/worker.py",
+        "start_line": 4,
+        "end_line": 5,
+        "claim_type": "silenced_bare_except",
+        "message": "Errors are silently discarded: the bare except only passes.",
+        "evidence": [
+          "    except:",
+          "        pass"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

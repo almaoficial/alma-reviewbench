@@ -9,9 +9,25 @@ import sys
 from typing import Mapping
 
 from .alma_gate import POLICY_SHA256, POLICY_VERSION, AlmaGate, candidate_to_finding
+from .alma_gate_v11 import (
+    POLICY_SHA256 as POLICY_SHA256_V11,
+    POLICY_VERSION as POLICY_VERSION_V11,
+    AlmaGateV11,
+)
+from .alma_gate_v12 import (
+    POLICY_SHA256 as POLICY_SHA256_V12,
+    POLICY_VERSION as POLICY_VERSION_V12,
+    AlmaGateV12,
+)
+from .alma_gate_v13 import (
+    POLICY_SHA256 as POLICY_SHA256_V13,
+    POLICY_VERSION as POLICY_VERSION_V13,
+    AlmaGateV13,
+)
 from .base_reviewer import BaseReviewer, Candidate
 from .diff_parser import parse_unified_diff
 from .llm_reviewer import LLMReviewer, RealLLMRefused
+from .llm_reviewer_v2 import LLMReviewerV2
 
 
 # Backwards-compatible name: the mock-first package raised this when
@@ -26,6 +42,36 @@ class RunResult:
     candidates: list[Candidate]
     ledger: list[dict[str, object]]
     llm_run_info: dict[str, object] | None = None
+
+
+def _select_gate(config: Mapping[str, str]):
+    """Gate selection (RB_CONFIG_GATE): "v1" (default) is the frozen
+    gate alma-evidence-gate/1.0.0 of the v1 experiment; "v11" is
+    alma-evidence-gate/1.1.0 (Adenda 1 of the v2 pre-registration: the
+    1.0.0's 8 classes plus 6 mechanically verifiable ones); "v12" is
+    alma-evidence-gate/1.2.0 (Adenda 2: the 1.1.0's 14 classes with
+    the red team's hardening — tokenized evidence views, co-occurrence,
+    block-level antidotes, added-line requirement); "v13" is
+    alma-evidence-gate/1.3.0 (Adenda 3: the 1.2.0's 14 classes with
+    the same hardened checks, delegated to the 1.2.0's own function,
+    plus the class hunter's 5 best-ranked classes — weak_hash,
+    tarfile_unsafe_extract, hardcoded_password_argument,
+    jwt_verification_disabled, debug_mode_enabled).  The gate exists
+    only in the ALMA arm; the base arm bypasses any gate."""
+
+    gate_version = (config.get("gate") or "v1").strip().lower()
+    if gate_version == "v1":
+        return AlmaGate()
+    if gate_version == "v11":
+        return AlmaGateV11()
+    if gate_version == "v12":
+        return AlmaGateV12()
+    if gate_version == "v13":
+        return AlmaGateV13()
+    raise ValueError(
+        f"unknown gate version {gate_version!r}; "
+        "expected 'v1', 'v11', 'v12' or 'v13' (RB_CONFIG_GATE)"
+    )
 
 
 def _normalize_repo(pr: Mapping[str, object]) -> str:
@@ -114,19 +160,52 @@ def run_agent(
         # API key, RB_MODEL_BASE_URL, a configured model and a positive
         # RB_MAX_SPEND_USD are all present.  Its candidates pass through the
         # same frozen gate below as the mock reviewer's.
-        reviewer = LLMReviewer.from_env(
-            dict(os.environ) if env is None else env,
-            config,
-            transport=llm_transport,
-        )
-        candidates = reviewer.review(diff_text=diff_text, diff=diff, config=config)
+        #
+        # Reviewer selection (RB_CONFIG_REVIEWER): "v1" (default) is the
+        # original single-pass diff-only reviewer of the v1 experiment;
+        # "v2" is the multi-pass full-context reviewer of
+        # PREREGISTRO-REVIEWBENCH-V2.md.  Both feed the identical gate.
+        effective_env = dict(os.environ) if env is None else env
+        reviewer_version = (config.get("reviewer") or "v1").strip().lower()
+        if reviewer_version == "v1":
+            reviewer = LLMReviewer.from_env(
+                effective_env,
+                config,
+                transport=llm_transport,
+            )
+            candidates = reviewer.review(
+                diff_text=diff_text, diff=diff, config=config
+            )
+        elif reviewer_version == "v2":
+            reviewer = LLMReviewerV2.from_env(
+                effective_env,
+                config,
+                transport=llm_transport,
+            )
+            candidates = reviewer.review(
+                diff_text=diff_text,
+                diff=diff,
+                config=config,
+                mode=mode,
+                repo_root=(
+                    config.get("repo_root")
+                    or effective_env.get("RB_REPO_ROOT")
+                    or "/work/repo"
+                ),
+            )
+        else:
+            raise ValueError(
+                f"unknown reviewer version {reviewer_version!r}; "
+                "expected 'v1' or 'v2' (RB_CONFIG_REVIEWER)"
+            )
         if reviewer.last_run_info is not None:
             llm_run_info = reviewer.last_run_info.to_dict()
     else:
         raise ValueError(f"unknown backend {backend!r}; expected 'mock' or 'llm'")
 
+    gate = _select_gate(config)
     if mode == "alma":
-        gate_result = AlmaGate().validate(candidates, diff, agent_name)
+        gate_result = gate.validate(candidates, diff, agent_name)
         findings = gate_result.findings
         ledger = [entry.to_dict() for entry in gate_result.ledger]
     else:
@@ -151,7 +230,7 @@ def run_agent(
                 "status": "accepted",
                 "reasons": ["ALMA gate bypassed for the pre-registered base A/B arm"],
                 "validator_version": "bypassed-base-arm",
-                "policy_sha256": POLICY_SHA256,
+                "policy_sha256": gate.policy_sha256,
             }
             for candidate in candidates
         ]
@@ -183,11 +262,25 @@ def _rb_config(env: Mapping[str, str]) -> dict[str, str]:
 def _print_applied_config(config: Mapping[str, str], mode: str, backend: str) -> None:
     requested_model = config.get("model", "mock-deterministic")
     effort = config.get("effort", "local")
+    # Print the SELECTED gate (RB_CONFIG_GATE); run_agent validates the
+    # value and fails closed on an unknown one, so an unrecognized value
+    # is only labelled here, never silently mapped to a real gate.
+    gate_version = (config.get("gate") or "v1").strip().lower()
+    if gate_version == "v13":
+        validator, policy_sha256 = POLICY_VERSION_V13, POLICY_SHA256_V13
+    elif gate_version == "v12":
+        validator, policy_sha256 = POLICY_VERSION_V12, POLICY_SHA256_V12
+    elif gate_version == "v11":
+        validator, policy_sha256 = POLICY_VERSION_V11, POLICY_SHA256_V11
+    elif gate_version == "v1":
+        validator, policy_sha256 = POLICY_VERSION, POLICY_SHA256
+    else:
+        validator, policy_sha256 = f"unknown-gate:{gate_version}", "unknown"
     print(
         "alma-reviewbench "
         f"requested_model={requested_model} effort={effort} "
         f"effective_backend={backend} governance={mode} "
-        f"validator={POLICY_VERSION} policy_sha256={POLICY_SHA256}",
+        f"validator={validator} policy_sha256={policy_sha256}",
         flush=True,
     )
     for key, value in sorted(config.items()):

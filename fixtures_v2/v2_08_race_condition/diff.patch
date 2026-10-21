@@ -1,0 +1,11 @@
+diff --git a/app/counter.py b/app/counter.py
+new file mode 100644
+--- /dev/null
++++ b/app/counter.py
+@@ -0,0 +1,6 @@
++import threading
++
++class Counter:
++    def __init__(self):
++        self.lock = threading.Lock()
++        self.value = 0

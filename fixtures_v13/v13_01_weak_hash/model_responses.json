@@ -1,0 +1,17 @@
+{
+  "passes": {
+    "weak_hash": [
+      {
+        "file": "app/hashing.py",
+        "start_line": 4,
+        "end_line": 4,
+        "claim_type": "weak_hash",
+        "message": "Password hashed with MD5, broken for collision resistance, without usedforsecurity=False.",
+        "evidence": [
+          "    return hashlib.md5(password.encode()).hexdigest()"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

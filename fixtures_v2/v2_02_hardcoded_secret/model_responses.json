@@ -1,0 +1,17 @@
+{
+  "passes": {
+    "hardcoded_secret": [
+      {
+        "file": "app/settings.py",
+        "start_line": 3,
+        "end_line": 3,
+        "claim_type": "hardcoded_secret",
+        "message": "Hardcoded credential: an API key literal is embedded in source code.",
+        "evidence": [
+          "API_KEY = \"sk-live-9f27ab31cd54\""
+        ]
+      }
+    ]
+  },
+  "general": []
+}

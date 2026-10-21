@@ -1,0 +1,17 @@
+{
+  "passes": {
+    "command_execution": [
+      {
+        "file": "app/runner.py",
+        "start_line": 4,
+        "end_line": 4,
+        "claim_type": "command_execution",
+        "message": "Command execution: os.system runs the given command in a shell.",
+        "evidence": [
+          "    os.system(cmd)"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

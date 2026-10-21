@@ -1,0 +1,11 @@
+diff --git a/app/db.py b/app/db.py
+--- a/app/db.py
++++ b/app/db.py
+@@ -8,6 +8,7 @@
+ def get_user(cursor, user_id):
+     # Look up one user by id.
+     query_parts = []
++    query = f"SELECT * FROM users WHERE id = {user_id}"
+     cursor.execute(query)
+     return cursor.fetchone()
+ 

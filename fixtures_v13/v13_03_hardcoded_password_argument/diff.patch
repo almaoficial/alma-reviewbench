@@ -1,0 +1,9 @@
+diff --git a/app/db.py b/app/db.py
+new file mode 100644
+--- /dev/null
++++ b/app/db.py
+@@ -0,0 +1,4 @@
++import psycopg2
++
++def connect():
++    return psycopg2.connect(host="db", user="app", password="s3cr3t-produccion")

@@ -1,0 +1,10 @@
+diff --git a/app/worker.py b/app/worker.py
+new file mode 100644
+--- /dev/null
++++ b/app/worker.py
+@@ -0,0 +1,5 @@
++def run(task):
++    try:
++        task.execute()
++    except:
++        pass

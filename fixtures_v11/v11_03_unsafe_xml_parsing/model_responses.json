@@ -1,0 +1,17 @@
+{
+  "passes": {
+    "unsafe_xml_parsing": [
+      {
+        "file": "app/feeds.py",
+        "start_line": 4,
+        "end_line": 4,
+        "claim_type": "unsafe_xml_parsing",
+        "message": "Feed XML is parsed with the standard library, no defusedxml.",
+        "evidence": [
+          "    return ET.fromstring(raw)"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

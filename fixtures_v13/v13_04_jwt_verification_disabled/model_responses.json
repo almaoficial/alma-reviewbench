@@ -1,0 +1,17 @@
+{
+  "passes": {
+    "jwt_verification_disabled": [
+      {
+        "file": "app/auth.py",
+        "start_line": 4,
+        "end_line": 4,
+        "claim_type": "jwt_verification_disabled",
+        "message": "JWT signature verification disabled via verify_signature False.",
+        "evidence": [
+          "    return jwt.decode(token, options={\"verify_signature\": False})"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

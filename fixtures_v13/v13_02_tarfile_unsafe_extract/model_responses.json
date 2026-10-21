@@ -1,0 +1,17 @@
+{
+  "passes": {
+    "tarfile_unsafe_extract": [
+      {
+        "file": "app/unpack.py",
+        "start_line": 5,
+        "end_line": 5,
+        "claim_type": "tarfile_unsafe_extract",
+        "message": "tar.extractall without filter= allows path traversal (CVE-2007-4559).",
+        "evidence": [
+          "        tar.extractall(path=\"/var/app/data\")"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

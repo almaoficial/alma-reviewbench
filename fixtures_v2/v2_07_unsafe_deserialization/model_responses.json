@@ -1,0 +1,17 @@
+{
+  "passes": {
+    "unsafe_deserialization": [
+      {
+        "file": "app/loader.py",
+        "start_line": 4,
+        "end_line": 4,
+        "claim_type": "unsafe_deserialization",
+        "message": "Unsafe deserialization: pickle.loads on untrusted data.",
+        "evidence": [
+          "    return pickle.loads(blob)"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

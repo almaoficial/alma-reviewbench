@@ -1,0 +1,17 @@
+{
+  "passes": {
+    "sql_injection": [
+      {
+        "file": "app/db.py",
+        "start_line": 11,
+        "end_line": 11,
+        "claim_type": "sql_injection",
+        "message": "SQL injection: the query is built with an f-string interpolating user_id.",
+        "evidence": [
+          "    query = f\"SELECT * FROM users WHERE id = {user_id}\""
+        ]
+      }
+    ]
+  },
+  "general": []
+}

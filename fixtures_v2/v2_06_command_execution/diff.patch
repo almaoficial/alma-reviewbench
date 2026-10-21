@@ -1,0 +1,9 @@
+diff --git a/app/runner.py b/app/runner.py
+new file mode 100644
+--- /dev/null
++++ b/app/runner.py
+@@ -0,0 +1,4 @@
++import os
++
++def run(cmd):
++    os.system(cmd)

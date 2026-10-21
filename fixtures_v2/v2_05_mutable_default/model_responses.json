@@ -1,0 +1,17 @@
+{
+  "passes": {
+    "mutable_default": [
+      {
+        "file": "app/collect.py",
+        "start_line": 1,
+        "end_line": 1,
+        "claim_type": "mutable_default",
+        "message": "Mutable default argument: bucket=[] is shared across calls.",
+        "evidence": [
+          "def collect(item, bucket=[]):"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

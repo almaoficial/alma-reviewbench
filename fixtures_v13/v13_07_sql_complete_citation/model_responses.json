@@ -1,0 +1,19 @@
+{
+  "passes": {
+    "sql_injection": [
+      {
+        "file": "app/users.py",
+        "start_line": 2,
+        "end_line": 4,
+        "claim_type": "sql_injection",
+        "message": "SQL statement built by string concatenation across a multi-line statement; cited whole per the citation guidance.",
+        "evidence": [
+          "    query = (",
+          "        \"SELECT * FROM users WHERE name = '\" + name + \"'\"",
+          "    )"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

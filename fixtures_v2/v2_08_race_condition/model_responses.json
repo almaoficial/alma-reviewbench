@@ -1,0 +1,18 @@
+{
+  "passes": {
+    "race_condition": [
+      {
+        "file": "app/counter.py",
+        "start_line": 5,
+        "end_line": 6,
+        "claim_type": "race_condition",
+        "message": "Shared counter state is mutated under a lock created per instance.",
+        "evidence": [
+          "        self.lock = threading.Lock()",
+          "        self.value = 0"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

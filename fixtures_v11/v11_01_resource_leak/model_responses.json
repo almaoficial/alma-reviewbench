@@ -1,0 +1,27 @@
+{
+  "passes": {
+    "resource_leak": [
+      {
+        "file": "app/files.py",
+        "start_line": 2,
+        "end_line": 2,
+        "claim_type": "resource_leak",
+        "message": "Config file is opened and never closed: no with, no close().",
+        "evidence": [
+          "    handle = open(path)"
+        ]
+      },
+      {
+        "file": "app/files.py",
+        "start_line": 7,
+        "end_line": 7,
+        "claim_type": "resource_leak",
+        "message": "Adversarial: this open is managed by a with statement.",
+        "evidence": [
+          "    with open(path) as handle:"
+        ]
+      }
+    ]
+  },
+  "general": []
+}

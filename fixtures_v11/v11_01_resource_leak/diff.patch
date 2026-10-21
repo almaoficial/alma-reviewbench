@@ -1,0 +1,13 @@
+diff --git a/app/files.py b/app/files.py
+new file mode 100644
+--- /dev/null
++++ b/app/files.py
+@@ -0,0 +1,8 @@
++def load_config(path):
++    handle = open(path)
++    data = handle.read()
++    return data
++
++def load_defaults(path):
++    with open(path) as handle:
++        return handle.read()

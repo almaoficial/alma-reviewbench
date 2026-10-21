@@ -1,0 +1,11 @@
+diff --git a/app/server.py b/app/server.py
+new file mode 100644
+--- /dev/null
++++ b/app/server.py
+@@ -0,0 +1,6 @@
++from flask import Flask
++
++app = Flask(__name__)
++
++if __name__ == "__main__":
++    app.run(host="0.0.0.0", debug=True)

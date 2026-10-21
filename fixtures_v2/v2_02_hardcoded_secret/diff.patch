@@ -1,0 +1,9 @@
+diff --git a/app/settings.py b/app/settings.py
+new file mode 100644
+--- /dev/null
++++ b/app/settings.py
+@@ -0,0 +1,4 @@
++import os
++
++API_KEY = "sk-live-9f27ab31cd54"
++DEBUG = False

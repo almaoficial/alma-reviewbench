@@ -1,0 +1,9 @@
+{
+  "base": "1111111111111111111111111111111111111111",
+  "body": "Local v13 fixture. No network or model call.",
+  "head": "2222222222222222222222222222222222222222",
+  "nwo": "example/reviewbench-fixture",
+  "pr_number": 407,
+  "repo": "https://github.com/example/reviewbench-fixture",
+  "title": "Synthetic v13 sql_injection complete-citation fixture (Adenda 3, lever 1)"
+}
