@@ -490,3 +490,337 @@ sin efecto y se asienta.
    ALMA solo si la linterna pasa; veredicto contra la **regla de
    avance de la §6**. Frenos: US$6,50 por PR, US$30 el total de la
    práctica. Nada de «Submit» (la final) desde este papel.
+
+---
+
+## ADENDA 1 — Reemplazo de la puerta del brazo ALMA: 1.4.0 → 1.4.1 (`gate=v141`)
+
+**Fecha:** 2026-10-21 · **Firma:** Alejandro, el 21/10/2026 a las
+21:56 EDT, por el chat («Firmar la adenda (gate=v141)»). Esta adenda
+se agrega al final del papel, fechada, **sin alterar ni una línea
+del cuerpo original** — las 11 secciones quedan tal como se
+congelaron — según el formato de la casa (el papel v2 acumuló 6
+adendas así). Es la adenda que la §6 del
+`PREREGISTRO-PUERTA-141.md` exigía **antes de cualquier corrida
+ALMA**: sin ella, la 1.4.1 — aun adoptada — no se usa en el brazo
+ALMA. **Esta adenda no autoriza ninguna corrida**: declara el
+reemplazo de puerta y nada más.
+
+### 1. La 1.4.0: construida, medida, NO adoptada
+
+La puerta 1.4.0 (`alma-evidence-gate/1.4.0`) fue construida según su
+papel e implementó la variante (ii) pre-registrada en la §4 de este
+papel. Su medición de adopción (recibo:
+`RESULTADO-MEDICION-PUERTA-140.md`) dio **NO ADOPTADA**: VP
+recuperados = 4 (≥ 1 ✓), equivalencia exacta de aceptados con la
+1.3.0 en los tres universos (✓), suite 208/208 verde (✓), pero
+**falsos nuevos = 1 (≠ 0 ✗)**: en la batería roja, el ataque **S3**
+— una inyección SQL real pero preexistente, citada solo en líneas
+de contexto, que el PR no introduce — pasó de rechazado a
+`needs_validation` por la vía (c) de completitud (su único chequeo
+fallido era el (f) «sin línea agregada»). El criterio de su §6 es
+conjuntivo y un solo falso bastó. En consecuencia, y tal como este
+papel declaró en su §4, **el brazo ALMA de la v2.3 no podía correr
+con la 1.4.0**, y no hubo sustitución silenciosa por la 1.3.0. La
+1.4.0 queda intacta como artefacto construido y medido; su NO
+adopción no se corrigió encima de ella.
+
+### 2. La 1.4.1: pre-registrada, construida en seco, ADOPTADA
+
+La reparación de esa frontera fue papel nuevo, como mandaba el
+resultado anterior: `PREREGISTRO-PUERTA-141.md` (cambio único: el
+chequeo (f) sale de los chequeos de completitud — un candidato de
+clase cuya evidencia citada no contiene ninguna línea agregada por
+el cambio es **rechazo firme** en la frontera, dominante sobre
+(a)/(b)). Construida en seco con el «sí» de Alejandro del
+21/10/2026 21:49 EDT y medida con el instrumento
+`medir_adopcion_v141.py` (recibo:
+`RESULTADO-MEDICION-PUERTA-141.md`), la 1.4.1 quedó **ADOPTADA**
+cumpliendo el criterio conjuntivo entero de su §4: VP recuperados =
+**los mismos 4** de la medición de la 1.4.0, identidad por
+identidad; **falsos nuevos = 0** en los tres universos, con **S3
+rechazado firme como causal (f), sin movimiento**; equivalencia
+exacta de aceptados con la 1.3.0 en los tres universos (mapa de
+estados idéntico en U2 y U3); **suite 236/236 verde**.
+
+### 3. El reemplazo declarado (anterior a cualquier corrida ALMA)
+
+Conforme a la §6 del papel de la 1.4.1, esta adenda declara
+expresamente, antes de cualquier corrida del brazo ALMA:
+
+- La puerta del brazo ALMA de la v2.3 es la
+  **`alma-evidence-gate/1.4.1`** (módulo `agent/alma_gate_v141.py`,
+  `POLICY_SHA256: 73a403d853fca843f06d289e90b5dd7e93dde8b469ad3da7b06bb8448c64db46`,
+  selector `RB_CONFIG_GATE=v141`).
+- La etiqueta de config del brazo ALMA en el portal es
+  **`gate=v141`**. Las menciones a `gate=v14` para el brazo ALMA en
+  el cuerpo de este papel (§3(d), §9 y §11 paso 6) quedan
+  sustituidas por esta declaración. La etiqueta `v14` queda atada
+  para siempre al artefacto 1.4.0 tal como fue construido y
+  medido: dos puertas distintas no comparten etiqueta.
+- La config ALMA llevará entonces `reviewer=v23` (sin cambio) y
+  `gate=v141` (en vez de `gate=v14`).
+
+### 4. Todo lo demás del papel queda intacto
+
+Este reemplazo de puerta es el único cambio. Quedan sin tocar: la
+**variante (ii)** `needs_validation` de la §4 (ALMA retiene lo
+general con sus blockers y la especialidad la juzga la puerta — hoy
+la 1.4.1 — con su frontera); la **regla de avance re-derivada de la
+§6** (linterna R_base grounded > 0,7 % primero; P_ALMA ≥ P_base +
+0,05 con su declaración de techo; pureza de la retención ≤ 1 de
+cada 3; **pérdida inexplicada = 0**; F1 reportado, no compuerta);
+el **orden base → linterna → ALMA** de la §11; los falsadores de la
+§8; y los frenos y topes (US$6,50 por PR, US$30 la práctica, US$20
+el semáforo). El semáforo v2.3 ya corrido (VERDE, solo brazo base)
+no se reabre ni se reinterpreta por esta adenda.
+
+### 5. Secuencia declarada (qué falta para que el brazo ALMA corra)
+
+Adoptada y declarada no es corriendo. El código v141 **todavía no
+está en la imagen publicada**: la imagen v2.3 en curso de
+publicación contiene la 1.4.0, no la 1.4.1. Para que el brazo ALMA
+corra harán falta, en orden y cada uno con su verificación:
+
+1. **Publicar el código v141 en una imagen verificada** (mismo
+   procedimiento de la línea: digest cotejado contra GHCR,
+   manifiesto que lo declare).
+2. **Editar la config ALMA del portal** con esa imagen y
+   `gate=v141` (guardar y releer, como siempre; el freno del portal
+   no se toca).
+3. Que la **práctica base supere la linterna** (R_base grounded >
+   0,7 %, §6 componente 1): solo entonces el brazo ALMA es
+   pertinente y se lanza, con el «sí» de Alejandro al lanzar como
+   manda la §11.
+
+Si la base no supera la linterna, los pasos 1 y 2 no se ejecutan:
+no se publica ni se configura para un brazo que no va a correr.
+
+---
+
+## ADENDA 2 — Reparación del techo de completion de la selección + observabilidad (v2.3.1)
+
+**Fecha:** 2026-10-21 · **Firma:** Alejandro, el 21/10/2026 a las
+23:20 EDT, por el chat («Bueno lo hagamos») — aprobación de la
+secuencia completa que esta adenda pre-registra: arreglar el techo,
+probar el arreglo sobre los casos que murieron, y relanzar la
+práctica. Se agrega al final del papel, fechada, **sin alterar ni
+una línea del cuerpo original ni de la Adenda 1**, según el formato
+de la casa. **Recibos:** `DIAGNOSTICO-PRACTICA-V23-20261021.md`
+(causa (d), clasificada y con su falsador) y
+`ADJUDICACION-PARCIAL-296-20261021.md` (la señal de detección que
+justifica reparar la línea en vez de archivarla).
+
+### 1. El hecho: la nº 296 murió en casa, en la etapa (a)
+
+La práctica base nº 296 (lanzada el 2026-10-21 22:26:40 EDT) cerró
+**FAILED «at run-agent (3, 4)»**, sin puntajes: 15 de 25 PRs
+completaron (106 findings nunca puntuados) y **20 de 35 intentos
+murieron con `error:2`** y el mismo texto terminal: *«selection pass
+did not return parseable JSON; failing closed»*. El diagnóstico
+clasificó la causa como **(d) — defecto del diseño v2.3 en casos
+reales**: la selección generalizada de la §3(a) — la única pieza que
+cambió contra la v2.2 — heredó sin cambios el techo de completion
+de **1.024 tokens** (`DEFAULT_TRIAGE_MAX_OUTPUT_TOKENS`, idéntico en
+v2, v2.1, v2.2 y v2.3); en esta clase de modelo ese techo descuenta
+los tokens de razonamiento **y** los de la respuesta visible, así
+que en diffs reales el razonamiento lo agota y el contenido vuelve
+vacío o truncado a mitad del JSON; `_extract_selection` hace
+`json.loads`, falla, y el revisor **cierra en falso por diseño**
+(`RealLLMRefused`, exit 2). El paso fino — que el razonamiento agota
+el presupuesto — quedó declarado como **inferencia** en el
+diagnóstico, porque el código no asienta el cuerpo de la respuesta
+ni su `finish_reason` cuando una pasada falla. Descartados con
+evidencia: plataforma/infraestructura (éxitos y muertes intercalados
+en el mismo contenedor; ningún shard cerca del timeout de 1.800 s,
+máximo 1.202 s), fondos (la corrida murió con **US$3,02** positivos;
+facturó **US$13,50**) y timeout por volumen (ningún corte es por
+timeout). La excepción de relanzamiento de la casa (cortes de
+infraestructura declarados) **no aplica** a una causa (d):
+relanzar exige arreglo declarado — esta adenda.
+
+La justificación de reparar, y no archivar: la adjudicación parcial
+de los 106 findings contra el gold público midió sobre los 15 PRs
+completados **precisión grounded 51,9 %** (55/106) y **recall del
+subconjunto 22,1 %** (43/195 TP; piso contado sobre el set completo:
+43/352 = **12,2 %**), con los **43 TP cubiertos todos por la vía
+general** — el diseño detecta en diffs reales muy por encima de la
+predicción de la §8 (1–3 %). Declarado en su propio informe y
+repetido aquí: esa medición es **parcial**, sobre un subconjunto
+auto-seleccionado por supervivencia al defecto, y **no es un
+puntaje** ni evalúa la linterna.
+
+### 2. El cambio exacto (dos piezas, nada más)
+
+**(i) Techo de completion de la selección: 1.024 → 4.096 tokens.**
+Se mueve el default de la pasada de selección (vía ya existente:
+`RB_LLM_V23_TRIAGE_MAX_OUTPUT_TOKENS`). **Solo la selección:** las
+pasadas profundas ya operan con su salida acotada a 4.096 (la cuenta
+de la §7) y **no se tocan** — ni su techo, ni su plantilla, ni su
+contexto, ni su disciplina de cita.
+
+**(ii) Observabilidad de la falla de parseo.** Cuando una respuesta
+de la selección no parsee, el revisor asienta en la información de
+corrida (`llm_run`) el **`finish_reason`** y un **extracto acotado
+del contenido crudo** recibido, antes de cerrar en falso. Sin cambio
+de comportamiento: el parseo sigue siendo `json.loads` total, la
+falla sigue siendo `RealLLMRefused` (exit 2), y el parseo permisivo
+sigue descartado (arreglo (v) del diagnóstico). Lo que cambia es
+que ninguna muerte futura de esta etapa se diagnostica por
+inferencia: el cuerpo queda a la vista.
+
+La construcción corregida se nombra **v2.3.1** (revisor
+`llm-reviewer/2.3.1`). La etiqueta `reviewer` del portal **se
+mantiene en `v23`** — lo que cambia es la imagen; la versión 2.3.1
+se declara en su manifiesto (§6, paso 4).
+
+**Todo lo demás queda idéntico:** la selección generalizada y su
+prompt (28 marcas en una lista de prioridad, tope duro de 5, orden),
+las pasadas profundas de la §3(b), la guardia en dos etapas y la
+degradación de la §3(c), la puerta base `gate=v13`, el brazo ALMA
+con la variante (ii) y la puerta 1.4.1 (`gate=v141`, Adenda 1), la
+regla de avance y la linterna de la §6, la batería congelada del
+semáforo, el modelo (gpt-5.6-sol) y el effort (medium), y las
+prohibiciones anti-pesca de la §5. Ningún prompt se ajusta: el
+arreglo nace de la causa medida en agregado, no del detalle por PR
+del gold.
+
+### 3. Contabilidad de peor caso re-derivada (precios de planificación de la §7)
+
+El único término que se mueve es la salida acotada de la selección:
+1.024 → 4.096 tokens × US$75/Mtok = de US$0,0768 a **US$0,3072** por
+llamada — **+US$0,2304 ≈ +US$0,23 por PR**, el delta que el
+diagnóstico calculó en su §6.
+
+| Plan | Papel (§7) | Con el techo nuevo | Régimen |
+|---|---|---|---|
+| Selección sola (PR ancla) | ≈US$0,30–0,35 | ≈US$0,53–0,58 | pre-vuelo 1 holgado contra el freno |
+| PR ancla completo (selección + 5 profundas) | ≈US$5,10 | **≈US$5,33** | **entra entero** bajo el freno de US$6,50 |
+| PR con contexto saturado (60.000) | ≈US$6,90 | ≈US$7,13 | **la degradación heredada absorbe la diferencia**: corren selección + 4 profundas (≈US$5,82 ≤ US$6,50) y la 5ª se declara |
+
+Declaración: el plan ancla sigue entrando completo y el saturado
+entra por la misma regla de degradación de la §3(c) que el papel ya
+pre-registró — el +US$0,23 no cambia *qué* plan degrada, solo el
+monto. El freno por PR (`RB_MAX_SPEND_USD` = US$6,50) **no se
+toca**, ni en el portal ni en el código. Y la salvedad medida por
+el diagnóstico (§4): la banda de planificación sobreestima la
+factura real en ≥2,4× (caché y/o precios de lista menores) — estas
+cuentas son unidades de guardia; la sonda y la práctica se miden
+por saldo, como siempre.
+
+### 4. La prueba del arreglo: sonda dirigida sobre los casos que murieron (tope US$8)
+
+Antes de cualquier práctica, y solo tras la construcción en seco
+(§6, paso 2), se corre **únicamente la pasada de selección
+arreglada** — sin pasadas profundas, sin puerta, sin emisión — en
+local, con la credencial por la vía sancionada
+(`custom.openai-rbench`), sobre los diffs de los PRs que la nº 296
+no pudo leer:
+
+- **Los 5 que murieron 3/3 (obligatorios, en este orden):**
+  `simnaut_emdash_2`, `scotthamilton77_agents-config_1`,
+  `wirechat_wirechat_183`, `mheuss_chronicle_14`,
+  `sdsykes_fastimage_165`.
+- **Si el presupuesto lo permite, los 3 intermitentes** (completaron
+  tras 1–2 intentos muertos): `PierreJanineh_TechDebtMCP_135`,
+  `brianc_node-postgres_3650`, `cmik_apilix_12`.
+
+**Éxito pre-registrado: JSON parseable en TODOS los casos
+corridos.** La sonda corre con contabilidad acumulada y **tope
+duro de US$8**; si el tope impidiera correr los 5 obligatorios, la
+sonda se declara **no ejecutada** (no hay éxito parcial). **Si un
+solo caso corrido vuelve no parseable, NO hay práctica:** se vuelve
+a diagnóstico en seco — esta vez con el cuerpo y el `finish_reason`
+asentados por la pieza (ii), sin inferencia.
+
+**Alcance honesto de la sonda:** prueba que los casos que morían
+determinísticamente (3/3 con el techo viejo) ahora parsean; **no
+mide una tasa de muertes** — una llamada por caso no la mide. La
+tasa se juzga en la práctica relanzada, contra el falsador del §7 de
+esta adenda (que adopta el del diagnóstico). De su resultado no se
+ajusta ningún prompt, como en la sonda de la §10: decide seguir o
+parar. Esta adenda **no autoriza un semáforo nuevo**: el de la §9
+ya corrió VERDE para la mecánica de la v2.3, y la sonda es el
+chequeo dirigido de la única etapa que cambia.
+
+### 5. Presupuesto de la etapa y compuerta de saldo
+
+Esta adenda **supersede la banda y el tope de la práctica del
+cuerpo (§7 y §11: esperado US$10–25, tope duro US$30) solo para
+esta etapa de reparación** — del tope viejo ya se consumieron
+US$13,50 en la nº 296, y fingir que sigue vigente sería
+contabilidad falsa. El presupuesto declarado de la etapa es:
+
+- **Sonda dirigida (§4): ≤ US$8.**
+- **Práctica base relanzada: US$15–25.**
+- **Brazo ALMA: US$15–25, solo si la linterna pasa** (sin linterna
+  no hay ALMA: §6 del papel y Adenda 1).
+
+**Compuerta de saldo (vinculante):** el saldo actual es **US$3,02**
+(lectura del billing de la cuenta Personal, 2026-10-21 22:52 EDT).
+**Ningún paso con gasto corre sin carga previa de Alejandro y sin
+saldo verificado ≥ el costo esperado del paso** (sonda: ≥ US$8;
+práctica: ≥ US$25; ALMA: ≥ US$25 y linterna pasada). El freno por
+PR (US$6,50) y el tope del semáforo (US$20) quedan como están.
+
+### 6. Secuencia (en orden, sin saltos)
+
+1. **Esta adenda** — firmada por Alejandro («Bueno lo hagamos»,
+   2026-10-21).
+2. **Construcción en seco v2.3.1 (US$0):** las dos piezas del §2 y
+   nada más. Suite completa verde (la heredada de 236 + tests
+   nuevos que fijen: el techo de la selección en 4.096, el techo de
+   las profundas intacto, y el asentamiento de `finish_reason` +
+   extracto ante un parseo fallido) y peor caso de la selección
+   re-medido en seco contra la cuenta de la §3.
+3. **Sonda dirigida (§4)** — compuerta de saldo cumplida; tope
+   US$8; éxito = JSON parseable en todos los casos corridos. Si
+   falla: alto, y diagnóstico en seco con el cuerpo a la vista.
+4. **Publicación v2.3.1:** imagen corregida por el procedimiento
+   de la línea (build desde la UI de GitHub Actions, **digest
+   verificado contra GHCR**, manifiesto nuevo que declara la
+   v2.3.1 y esta adenda). El commit de la publicación incluye
+   además los **documentos locales pendientes**: el paquete 1.4.1
+   completo (`agent/alma_gate_v141.py`, `tests/test_gate_v141.py`,
+   `medir_adopcion_v141.py`, `RESULTADO-MEDICION-PUERTA-141.md`),
+   este papel con la Adenda 2, `DIAGNOSTICO-PRACTICA-V23-20261021.md`,
+   `ADJUDICACION-PARCIAL-296-20261021.md` y
+   `RESULTADO-PRACTICA-V23-20261021.md`.
+5. **Config base del portal a la imagen nueva** — guardar y
+   releer, como siempre (`reviewer=v23` se mantiene, `gate=v13`;
+   el freno no se toca; la config ALMA no se toca en este paso).
+6. **Práctica base relanzada** — compuerta de saldo cumplida. Es
+   **una corrida nueva**: no re-califica a la nº 296, que queda
+   FAILED. Su puntaje se lee contra la §6.
+7. **Linterna** (R_base grounded > 0,7 %, §6 componente 1) sobre
+   la corrida relanzada.
+8. **Si la linterna pasa:** config ALMA con **la misma imagen
+   corregida** y `gate=v141` (cumpliendo la secuencia de la
+   Adenda 1, §5) y corrida del brazo ALMA, con el «sí» de
+   Alejandro al lanzar; veredicto contra la regla de avance de la
+   §6. Si no pasa, se lee el falsador principal de la §8 tal como
+   está escrito.
+
+### 7. Falsadores de esta adenda y honestidad
+
+- **La nº 296 queda FAILED para siempre.** Esta adenda no la
+  re-califica, no le inventa un puntaje y no pasa su linterna
+  retroactivamente: la adjudicación parcial es evidencia para
+  decidir la reparación, no un puntaje — la linterna solo se
+  evalúa sobre una corrida completa puntuada por la plataforma.
+- **La hipótesis del techo, a prueba:** si la práctica relanzada
+  muere con la **misma firma** (JSON no parseable en la selección),
+  la hipótesis del techo queda **refutada** y la línea **se
+  detiene sin tercer intento automático**. Ningún arreglo (iii)
+  reintento interno ni (iv) rediseño de la selección corre por
+  inercia: cualquier nuevo intento es papel nuevo y decisión nueva
+  de Alejandro. Es el falsador que el diagnóstico dejó escrito en
+  su §7, adoptado por esta adenda.
+- **Si el cuerpo asentado mostrara truncación aun con 4.096**, el
+  mecanismo se confirma pero el techo no alcanza: también se
+  detiene a papel — no se sube el techo otra vez por inercia.
+- **Lo que esta adenda no promete:** que la práctica relanzada
+  complete (la sonda acota el riesgo sobre los casos peores
+  conocidos; no lo elimina), ni que la linterna pase. La predicción
+  de la §8 sigue siendo la del papel; la adjudicación parcial, con
+  su sesgo declarado, sugiere que era pesimista. La corrida manda.

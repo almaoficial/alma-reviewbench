@@ -61,6 +61,32 @@ arming/payload safety contract is the v1's (ALLOW_REAL_LLM=1, API
 key, RB_MODEL_BASE_URL, model, positive RB_MAX_SPEND_USD; no
 ``temperature``, no ``max_tokens``; ``max_completion_tokens``).
 
+Fix v2.3.1 (2026-10-21, diagnosis of practice run #296 —
+DIAGNOSTICO-PRACTICA-V23-20261021.md, cause (d)): the generalized
+selection, the one stage that changed against v2.2, inherited the
+1,024-token completion ceiling unchanged; on real diffs the model's
+reasoning over 28 marks exhausts that budget (the ceiling discounts
+reasoning AND visible output), the content comes back empty or
+truncated mid-JSON, and the reviewer fails closed at the selection
+parse — 20 of 35 attempts died there, one whole shard by the
+platform's preflight rule.  Two changes, nothing else:
+
+- The DEFAULT selection completion ceiling is 4,096 tokens
+  (``DEFAULT_TRIAGE_MAX_OUTPUT_TOKENS``), the same ceiling the deep
+  passes already run under.  The measured v2.3.0 behavior stays
+  reproducible by configuration: pin
+  ``RB_LLM_V23_TRIAGE_MAX_OUTPUT_TOKENS=1024`` (env) or
+  ``triage_max_output_tokens=1024`` (RB_CONFIG_TRIAGE_MAX_OUTPUT_
+  TOKENS) and the selection budget is exactly the one run #296
+  died under; every other byte of behavior is unchanged.
+- Parse failures are no longer blind: when any pass's content does
+  not parse or comes back empty, the run info settles a
+  ``parse_failures`` record (pass, ``finish_reason``, content
+  length, a bounded 500-char excerpt) and the refusal message
+  carries the same data, so the agent log shows WHY the content
+  failed.  The fail-closed rule itself does not move: an
+  unparseable response still emits nothing.
+
 Selection: run configuration ``RB_CONFIG_REVIEWER=v23`` (default stays
 ``v1``); see ``agent/main.py``.  Arms (paper §3d): base gate=v13,
 ALMA gate=v14 — the first gate divergence between arm configs,
@@ -115,11 +141,18 @@ from .llm_reviewer_v2 import (
 )
 
 
-REVIEWER_VERSION = "llm-reviewer/2.3.0"
+REVIEWER_VERSION = "llm-reviewer/2.3.1"
 SELECTION_PASS = "selection"
 FALLBACK_PASS = "fallback_single"
 MAX_DEEP_PASSES = 5
-DEFAULT_TRIAGE_MAX_OUTPUT_TOKENS = 1024
+# v2.3.0 shipped 1024 here, inherited unchanged from v2/v2.1/v2.2 —
+# the ceiling run #296 died under (module docstring, fix v2.3.1).
+# 4096 is the ceiling the deep passes already run under
+# (LLMSettings.max_output_tokens default).  Pin the env/config
+# (RB_LLM_V23_TRIAGE_MAX_OUTPUT_TOKENS / RB_CONFIG_TRIAGE_MAX_
+# OUTPUT_TOKENS) to 1024 to reproduce the measured v2.3.0 budget.
+DEFAULT_TRIAGE_MAX_OUTPUT_TOKENS = 4096
+PARSE_FAILURE_EXCERPT_CHARS = 500
 
 # The nine general categories (paper §3a): the benchmark's own public
 # taxonomy labels, in the paper's order.  The guidance of each is a
@@ -360,6 +393,53 @@ def _extract_selection(content: object) -> list[object]:
     return candidates
 
 
+def _parse_failure_record(
+    pass_name: str, finish_reason: object, content: object
+) -> dict[str, object]:
+    """Settle WHY a pass's content failed to parse (fix v2.3.1,
+    diagnosis §6(ii)): the finish_reason the endpoint reported and a
+    bounded excerpt of the raw content, so the next death at this
+    stage is read, not inferred.  Observability only — the caller
+    still fails closed."""
+
+    if isinstance(content, str):
+        length: int | None = len(content)
+        excerpt = content[:PARSE_FAILURE_EXCERPT_CHARS]
+    else:
+        length = None
+        excerpt = f"<non-text content: {type(content).__name__}>"
+    return {
+        "pass": pass_name,
+        "finish_reason": finish_reason,
+        "content_length": length,
+        "content_excerpt": excerpt,
+    }
+
+
+def _refuse_parse_failure(
+    info: "LLMRunInfoV23",
+    pass_name: str,
+    exc: RealLLMRefused,
+    finish_reason: object,
+    content: object,
+) -> None:
+    """Record a parse failure in the run info and re-raise the
+    refusal with the settled data appended, so it also reaches the
+    agent log (main.py prints only the exception on a refusal).
+    The original message stays the prefix — log contrasts built on
+    it keep working.  Always raises."""
+
+    record = _parse_failure_record(pass_name, finish_reason, content)
+    info.parse_failures.append(record)
+    excerpt_oneline = " ".join(str(record["content_excerpt"]).split())
+    raise RealLLMRefused(
+        f"{exc} [parse failure settled: pass={pass_name}, "
+        f"finish_reason={finish_reason!r}, "
+        f"content_length={record['content_length']}, "
+        f"content_excerpt={excerpt_oneline!r}]"
+    ) from exc
+
+
 @dataclass
 class LLMRunInfoV23:
     """What the v2.3 run did, for the run log (never the key)."""
@@ -390,6 +470,10 @@ class LLMRunInfoV23:
     selection_unknown_marks: int = 0
     selection_malformed_entries: int = 0
     degradation: dict[str, object] | None = None
+    # Fix v2.3.1 observability: the selection ceiling in force for
+    # this run, and one settled record per unparseable response.
+    triage_max_output_tokens: int = 0
+    parse_failures: list[dict[str, object]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, object]:
         return {
@@ -419,6 +503,8 @@ class LLMRunInfoV23:
             "selection_unknown_marks": self.selection_unknown_marks,
             "selection_malformed_entries": self.selection_malformed_entries,
             "degradation": self.degradation,
+            "triage_max_output_tokens": self.triage_max_output_tokens,
+            "parse_failures": [dict(r) for r in self.parse_failures],
         }
 
 
@@ -579,8 +665,13 @@ class LLMReviewerV23:
 
     # -- one model call -----------------------------------------------------
 
-    def _call(self, payload: dict[str, object]) -> tuple[object, dict | None]:
-        """Run one chat-completions call; (content, usage-or-None)."""
+    def _call(
+        self, payload: dict[str, object]
+    ) -> tuple[object, dict | None, object]:
+        """Run one chat-completions call; (content, usage-or-None,
+        finish_reason-or-None).  The finish_reason travels with the
+        content so a later parse failure can settle WHY the content
+        looks the way it does (fix v2.3.1)."""
 
         settings = self.settings
         status, body = self.transport(
@@ -600,14 +691,18 @@ class LLMReviewerV23:
             )
         try:
             response = json.loads(body.decode("utf-8"))
-            content = response["choices"][0]["message"]["content"]
+            choice = response["choices"][0]
+            content = choice["message"]["content"]
         except (ValueError, KeyError, IndexError, TypeError, UnicodeDecodeError) as exc:
             raise RealLLMRefused(
                 "model response is not valid chat-completions JSON; "
                 "failing closed without emitting findings"
             ) from exc
+        finish_reason = (
+            choice.get("finish_reason") if isinstance(choice, dict) else None
+        )
         usage = response.get("usage") if isinstance(response, dict) else None
-        return content, usage if isinstance(usage, dict) else None
+        return content, usage if isinstance(usage, dict) else None, finish_reason
 
 
     def _account(
@@ -683,6 +778,7 @@ class LLMReviewerV23:
             model=settings.model,
             gate_version=self.gate_version,
             passes=[SELECTION_PASS],
+            triage_max_output_tokens=self.triage_max_output_tokens,
             context_token_budget=self.context_token_budget,
             context_estimated_tokens=context_tokens,
             context_files_included=included,
@@ -705,14 +801,18 @@ class LLMReviewerV23:
                 f"pass exceeds RB_MAX_SPEND_USD=US${cap:.4f}; "
                 "no model call was made"
             )
-        content, usage = self._call(selection_payload)
+        content, usage, finish_reason = self._call(selection_payload)
         info.calls += 1
         selection_cost = self._account(
             selection_payload, content, usage, info, running
         )
-        selected, overflow = self._filter_selection(
-            _extract_selection(content), info
-        )
+        try:
+            raw_selection = _extract_selection(content)
+        except RealLLMRefused as exc:
+            _refuse_parse_failure(
+                info, SELECTION_PASS, exc, finish_reason, content
+            )
+        selected, overflow = self._filter_selection(raw_selection, info)
         info.selection_selected = [name for _, name in selected]
         info.selection_overflow = list(overflow)
 
@@ -752,7 +852,7 @@ class LLMReviewerV23:
                 }
             for name in admitted:
                 payload = deep_payloads[name]
-                content, usage = self._call(payload)
+                content, usage, finish_reason = self._call(payload)
                 info.calls += 1
                 info.passes.append(name)
                 self._account(payload, content, usage, info, running)
@@ -764,6 +864,7 @@ class LLMReviewerV23:
                     info,
                     candidates,
                     seen,
+                    finish_reason,
                 )
             return candidates
 
@@ -779,7 +880,7 @@ class LLMReviewerV23:
                 "deep_passes_dropped": list(selected_names),
                 "fallback_single_pass": True,
             }
-            content, usage = self._call(fallback_payload)
+            content, usage, finish_reason = self._call(fallback_payload)
             info.calls += 1
             info.passes.append(FALLBACK_PASS)
             self._account(fallback_payload, content, usage, info, running)
@@ -791,6 +892,7 @@ class LLMReviewerV23:
                 info,
                 candidates,
                 seen,
+                finish_reason,
             )
             return candidates
 
@@ -856,8 +958,18 @@ class LLMReviewerV23:
         info: LLMRunInfoV23,
         candidates: list[Candidate],
         seen: set[tuple[str, int, int, str, str]],
+        finish_reason: object = None,
     ) -> None:
-        raw_findings = _extract_findings(content)
+        try:
+            raw_findings = _extract_findings(content)
+        except RealLLMRefused as exc:
+            _refuse_parse_failure(
+                info,
+                pass_name if pass_name is not None else FALLBACK_PASS,
+                exc,
+                finish_reason,
+                content,
+            )
         info.raw_findings += len(raw_findings)
         for raw in raw_findings:
             candidate = self._to_candidate_v23(
@@ -972,6 +1084,7 @@ __all__ = [
     "LLMReviewerV23",
     "LLMRunInfoV23",
     "MAX_DEEP_PASSES",
+    "PARSE_FAILURE_EXCERPT_CHARS",
     "REVIEWER_VERSION",
     "SELECTION_PASS",
 ]

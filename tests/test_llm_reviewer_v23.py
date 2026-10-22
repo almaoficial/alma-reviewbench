@@ -107,6 +107,14 @@ class GeneralizedTransport:
         return [pass_name_of(call["payload"]) for call in self.calls]
 
 
+class HeavySelectionTransport(GeneralizedTransport):
+    """The selection reports having used most of its output budget
+    (completion 4000 of the v2.3.1 ceiling) — the post-fix world
+    the no-deep-affordable scenario lives in."""
+
+    USAGE = {"prompt_tokens": 100, "completion_tokens": 4000}
+
+
 class SelectionTests(unittest.TestCase):
     def test_mixed_marks_share_one_cap_and_settle_per_family(self):
         directory, diff_text, pr, truth, planted = load_semaforo_case(
@@ -127,7 +135,7 @@ class SelectionTests(unittest.TestCase):
             directory, diff_text, pr, CONFIG_ALMA_V14, armed_env(), transport
         )
         info = result.llm_run_info
-        self.assertEqual(info["reviewer_version"], "llm-reviewer/2.3.0")
+        self.assertEqual(info["reviewer_version"], "llm-reviewer/2.3.1")
         self.assertEqual(info["gate_version"], "alma-evidence-gate/1.4.0")
         self.assertEqual(
             info["selection_candidates"],
@@ -184,7 +192,10 @@ class SelectionTests(unittest.TestCase):
         self.assertIn("CITATION (required by the gate)", system)
         self.assertIn("THE-DIFF-TEXT", user)
         self.assertNotIn("full contents at PR head", user)
-        self.assertEqual(payload["max_completion_tokens"], 1024)
+        # Fix v2.3.1: the selection ceiling defaults to 4096 (was
+        # 1024 in v2.3.0 — the budget run #296 died under; the 1024
+        # pin stays reproducible, see test_llm_reviewer_v231.py).
+        self.assertEqual(payload["max_completion_tokens"], 4096)
         self.assertNotIn("temperature", payload)
         self.assertNotIn("max_tokens", payload)
 
@@ -274,13 +285,17 @@ class GuardEstimateTests(unittest.TestCase):
         self.assertGreater(deep_general, 0.70)
         self.assertLess(deep_general, 1.40)
         # The generalized selection over the anchor-sized diff alone:
-        # measured at construction; the plan must fit the brake.
+        # re-derived under the fix v2.3.1 ceiling (4096): worst case
+        # US$0.9653 (was US$0.7349 at the v2.3.0 ceiling of 1024 —
+        # the delta is exactly 3072 output tokens x US$75/Mtok =
+        # US$0.2304).  The full anchor plan still fits the brake.
         selection = reviewer.worst_case_estimate(
             self._pad_until(
                 lambda diff: reviewer.build_selection_payload(diff), 41_160
             )
         )
-        self.assertLess(selection, 0.80)
+        self.assertGreater(selection, 0.90)
+        self.assertLess(selection, 1.00)
         total = selection + MAX_DEEP_PASSES * deep
         self.assertLess(total, 6.50)
 
@@ -444,7 +459,14 @@ class DegradationTests(unittest.TestCase):
         selection_worst = probe.worst_case_estimate(
             probe.build_selection_payload(diff_text)
         )
-        transport = GeneralizedTransport(marks=["tls_verification_disabled"])
+        # Fix v2.3.1 scenario note: with the selection and deep
+        # ceilings now equal (4096), a cap priced at the selection's
+        # worst case would admit a small deep pass whenever the
+        # selection's REPORTED cost is tiny — admission runs on the
+        # reported cost.  The scenario therefore reports a
+        # selection that used its budget (the post-fix world); the
+        # declaration under test is unchanged.
+        transport = HeavySelectionTransport(marks=["tls_verification_disabled"])
         result = run_case(
             directory,
             diff_text,
@@ -649,7 +671,7 @@ class BatteryDryRunTests(unittest.TestCase):
                         mode=mode,
                     )
                     info = result.llm_run_info
-                    self.assertEqual(info["reviewer_version"], "llm-reviewer/2.3.0")
+                    self.assertEqual(info["reviewer_version"], "llm-reviewer/2.3.1")
                     self.assertEqual(info["calls"], 2)
                     self.assertEqual(
                         info["selection_specialty"], [truth["planted_class"]]

@@ -29,6 +29,11 @@ from .alma_gate_v14 import (
     POLICY_VERSION as POLICY_VERSION_V14,
     AlmaGateV14,
 )
+from .alma_gate_v141 import (
+    POLICY_SHA256 as POLICY_SHA256_V141,
+    POLICY_VERSION as POLICY_VERSION_V141,
+    AlmaGateV141,
+)
 from .base_reviewer import BaseReviewer, Candidate
 from .diff_parser import parse_unified_diff
 from .llm_reviewer import LLMReviewer, RealLLMRefused
@@ -50,11 +55,12 @@ class RunResult:
     candidates: list[Candidate]
     ledger: list[dict[str, object]]
     llm_run_info: dict[str, object] | None = None
-    # Gate 1.4.0 only: the held candidates (needs_validation records,
-    # as dicts).  None for every other gate — the ledger file then
-    # keeps its historical bare-list shape; a list (possibly empty)
-    # makes the ledger file an object with a separate
-    # "needs_validation" section, never mixed into the findings.
+    # Gates 1.4.0/1.4.1 only: the held candidates (needs_validation
+    # records, as dicts).  None for every other gate — the ledger
+    # file then keeps its historical bare-list shape; a list
+    # (possibly empty) makes the ledger file an object with a
+    # separate "needs_validation" section, never mixed into the
+    # findings.
     needs_validation: list[dict[str, object]] | None = None
 
 
@@ -73,8 +79,12 @@ def _select_gate(config: Mapping[str, str]):
     jwt_verification_disabled, debug_mode_enabled); "v14" is
     alma-evidence-gate/1.4.0 (PREREGISTRO-PUERTA-140.md: the 1.3.0 by
     delegation plus the third state needs_validation, extended to
-    general categories by PREREGISTRO-REVIEWBENCH-V23.md).  The gate
-    exists only in the ALMA arm; the base arm bypasses any gate."""
+    general categories by PREREGISTRO-REVIEWBENCH-V23.md); "v141" is
+    alma-evidence-gate/1.4.1 (PREREGISTRO-PUERTA-141.md: the 1.4.0
+    with the single routing change of its §2 — check (f), no cited
+    line added by this change, is a firm rejection at the frontier
+    again, never a needs_validation blocker).  The gate exists only
+    in the ALMA arm; the base arm bypasses any gate."""
 
     gate_version = (config.get("gate") or "v1").strip().lower()
     if gate_version == "v1":
@@ -87,9 +97,11 @@ def _select_gate(config: Mapping[str, str]):
         return AlmaGateV13()
     if gate_version == "v14":
         return AlmaGateV14()
+    if gate_version == "v141":
+        return AlmaGateV141()
     raise ValueError(
         f"unknown gate version {gate_version!r}; "
-        "expected 'v1', 'v11', 'v12', 'v13' or 'v14' (RB_CONFIG_GATE)"
+        "expected 'v1', 'v11', 'v12', 'v13', 'v14' or 'v141' (RB_CONFIG_GATE)"
     )
 
 
@@ -358,7 +370,9 @@ def _print_applied_config(config: Mapping[str, str], mode: str, backend: str) ->
     # value and fails closed on an unknown one, so an unrecognized value
     # is only labelled here, never silently mapped to a real gate.
     gate_version = (config.get("gate") or "v1").strip().lower()
-    if gate_version == "v14":
+    if gate_version == "v141":
+        validator, policy_sha256 = POLICY_VERSION_V141, POLICY_SHA256_V141
+    elif gate_version == "v14":
         validator, policy_sha256 = POLICY_VERSION_V14, POLICY_SHA256_V14
     elif gate_version == "v13":
         validator, policy_sha256 = POLICY_VERSION_V13, POLICY_SHA256_V13
@@ -452,8 +466,8 @@ def main(argv: list[str] | None = None) -> int:
         if ledger_path is not None:
             ledger_path.parent.mkdir(parents=True, exist_ok=True)
             if result.needs_validation is not None:
-                # Gate 1.4.0: the held candidates live in their own
-                # section of the ledger file, never among the
+                # Gates 1.4.0/1.4.1: the held candidates live in their
+                # own section of the ledger file, never among the
                 # accepted/rejected entries and never in the findings.
                 ledger_payload: object = {
                     "ledger": result.ledger,
