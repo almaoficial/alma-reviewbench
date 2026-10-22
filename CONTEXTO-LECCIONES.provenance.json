@@ -1,0 +1,107 @@
+{
+ "artifact": "alma-lessons-context/1.0",
+ "compiler": "alma-lessons-compiler/1.0",
+ "corpus": {
+  "run": 298,
+  "claims": 166,
+  "decisions_sha256": "feebdc6e0aecf073dd81b7e1dabde670449932fbdef2d9e073a15174ea74651c"
+ },
+ "taxonomy": {
+  "emitido": 79,
+  "muerto_en_origen_sin_patron": 54,
+  "muerto_en_origen_tokens": 32,
+  "rechazado_puerta": 1
+ },
+ "block_chars": 9052,
+ "examples": [
+  {
+   "tag": "D1",
+   "pr": "AY2526S2-CS2103T-W14-3_tp_152-e0a9ce03",
+   "idx": 7,
+   "gold": "TP",
+   "gold_idx": 29,
+   "disp": "muerto_en_origen_tokens",
+   "origin": "none",
+   "message_sha256": "6c983b819fa776dcc543a2d03113cae0cfafbed58884dd2e47fa78beeaca5e94",
+   "evidence_sha256": "ae65c29c03d388df3dd3d71f3693cd140c3db73cb1ba3843861c3bc9dc57e7e2",
+   "absent_tokens": [
+    "NoteCommand.execute",
+    "model.setNote"
+   ]
+  },
+  {
+   "tag": "D2",
+   "pr": "DisciplinedSoftware_Codebase-Conversion_1-4b46d68c",
+   "idx": 0,
+   "gold": "TP",
+   "gold_idx": 45,
+   "disp": "muerto_en_origen_tokens",
+   "origin": "none",
+   "message_sha256": "9ec13413da6d2208ed0bd0e28b73e9c5d66f4923bdbb33ede052ccaf2342de9c",
+   "evidence_sha256": "8c63db12a34fa434fedd6fbb21be683ac3e5122cd3468e89a71d809796f69591",
+   "absent_tokens": [
+    "rust_time_ms"
+   ]
+  },
+  {
+   "tag": "D3",
+   "pr": "DisciplinedSoftware_Codebase-Conversion_1-4b46d68c",
+   "idx": 3,
+   "gold": "TP",
+   "gold_idx": 43,
+   "disp": "muerto_en_origen_sin_patron",
+   "origin": "none",
+   "message_sha256": "5399559c7aa484b27400b81ff3be1f470f173930d5f6f6a0e79ce522e3870ce6",
+   "evidence_sha256": "92b2be012c5ccd356fd715ff7ba14c2dfbe01f44cb41e66c115c9209c385ee84",
+   "absent_tokens": []
+  },
+  {
+   "tag": "D4",
+   "pr": "DisciplinedSoftware_Codebase-Conversion_1-4b46d68c",
+   "idx": 6,
+   "gold": "TP",
+   "gold_idx": 47,
+   "disp": "muerto_en_origen_sin_patron",
+   "origin": "none",
+   "message_sha256": "0cb0929595ed8fe8e01c26393e16d9e1a5856320e646698b9b838b6d93b8e1cb",
+   "evidence_sha256": "e9452cef4d6fd676a66868757fbd342ab8095f20ece6af44713b7072b950921c",
+   "absent_tokens": []
+  },
+  {
+   "tag": "D5",
+   "pr": "scottlz0310_Mcp-Docker_29-e7705d26",
+   "idx": 1,
+   "gold": "TP",
+   "gold_idx": 33,
+   "disp": "rechazado_puerta",
+   "origin": "declared",
+   "message_sha256": "8357efa0ac846b099637d3ff8e52c499ef656476496c1a507e7af28fe843dd2a",
+   "evidence_sha256": "b2a7bcbbf103f4763a09ff16bf25cc1eb692ca5c93acd97da0b8a0ef44b07b86",
+   "absent_tokens": []
+  },
+  {
+   "tag": "L1",
+   "pr": "AA-Factory_aafactory-prototype_17-a1978cb7",
+   "idx": 0,
+   "gold": "TP",
+   "gold_idx": 1,
+   "disp": "emitido",
+   "origin": "declared",
+   "message_sha256": "67f128b38b3ec92fea9c0ce7c67470b0bda6820897716ebf95d40f8be5ba20ce",
+   "evidence_sha256": "3fa857960a139ca6c030524bea00d9c757ebf296574ba4755436a7c5e514de15",
+   "absent_tokens": []
+  },
+  {
+   "tag": "L2",
+   "pr": "AA-Factory_aafactory-prototype_17-a1978cb7",
+   "idx": 1,
+   "gold": "TP",
+   "gold_idx": 2,
+   "disp": "emitido",
+   "origin": "declared",
+   "message_sha256": "3ce0a6841648493241c1410d5bc6c88d69dda929837e26b97c705760e6713025",
+   "evidence_sha256": "afd89f4447ceb8684bc64e470c811c79b92169dc93609084635b839a1e1bdfb1",
+   "absent_tokens": []
+  }
+ ]
+}
