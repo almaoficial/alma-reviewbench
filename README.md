@@ -38,7 +38,40 @@ ReviewBench, el benchmark público de GitHub para agentes de code review.
 - **Recorded next step, not another downstream filter:** enforce the claim
   contract when the reviewer creates each finding. That producer-side design
   is pre-registered in the [contract-native reviewer paper](PREREGISTRO-REVISOR-CONTRATO.md);
-  no result is claimed for it here.
+  its measured result is the next bullet.
+- **The birth shaper was measured in replay — and the composed bar still
+  failed:** shaping each claim at birth, with the full diff in view, raised
+  contract conformance from the post-hoc ceiling of 49 to **80/166**. The
+  composed pipeline (birth shaper → contract check → gate 1.5.0, none of them
+  modified) emitted 79 findings at **55.7% precision among emitted** (44 true
+  positives), but the composed waiting room stayed at **51.8%** against the
+  pre-registered bar of **<50%** — the global bar **did not pass, by 3
+  claims**. The residual bottleneck is no longer form but substance: 86
+  claims are born with nothing citable to assert. See the
+  [birth-shaper result](RESULTADO-REVISOR-CONTRATO-20261022.md).
+- **Reviewer v2.4 adds evidence discipline at production — built and
+  dry-verified, production effect not measured:** each finding is now born
+  declaring its pattern copied from the lines it cites, and anything the
+  model cannot support with citable lines is declared unverifiable at origin
+  in a production ledger instead of being dressed up as a finding; the birth
+  shaper runs as the last production stage. The full suite (295/295) and the
+  dry semaphore battery (16/16) pass. **No production effect is claimed:**
+  validating it requires a real run, and that paid validation is designed in
+  the paper and parked until funding exists and a spending cap for the line
+  is set. See the [v2.4 pre-registration](PREREGISTRO-PRODUCTOR-EVIDENCIA.md)
+  and the [v2.4 build result](RESULTADO-PRODUCTOR-EVIDENCIA-20261022.md).
+- **A lessons memory the reviewer actually reads — compiled with audited
+  provenance, effect not measured:** a deterministic compiler distills the
+  existing adjudications into a bounded lessons context (9,052 characters):
+  the taxonomy of how the claims died, 7 traceable examples (5 born dead, 2
+  that lived) and the distilled rules. A programmatic provenance audit found
+  **0 invented examples** — every example traces verbatim to a real
+  adjudicated finding — and reviewer v2.5 loads the block when it produces.
+  **Whether the lessons improve production is not measured;** the comparison
+  is a third arm of the same parked paid design. See the
+  [lessons-memory pre-registration](PREREGISTRO-MEMORIA-LECCIONES.md), the
+  [compiled lessons context](CONTEXTO-LECCIONES.md) and the
+  [build result](RESULTADO-MEMORIA-LECCIONES-20261022.md).
 
 **Estado al 2026-10-19 (v1 CERRADA):** el agente `alma-reviewer` fue
 registrado y **aprobado** — el mantenedor fusionó el PR #89 el 2026-10-19 —
