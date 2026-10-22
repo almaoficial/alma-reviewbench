@@ -4,6 +4,42 @@ Este directorio contiene un adaptador local **US$0 por defecto** para
 probar a ALMA como capa de gobernanza sobre un revisor de código de
 ReviewBench, el benchmark público de GitHub para agentes de code review.
 
+## Results — ReviewBench v2.3 line (October 22, 2026)
+
+- **Baseline measured, finding by finding:** on 25 real pull requests, the
+  v2.3.1 baseline produced 166 findings; local grounded adjudication against
+  the public gold set gave **precision 53.6% (89/166), recall 18.75%
+  (66/352), F1 27.8%**. See the [v2.3 paper and addenda](PREREGISTRO-REVIEWBENCH-V23.md)
+  and the [complete baseline adjudication](ADJUDICACION-COMPLETA-298-20261022.md).
+- **ALMA gate 1.4.1 failed the measured test:** run 311 completed all 25 PRs,
+  but only one finding passed the gate and it was not a true positive:
+  **grounded precision 0.0% (0/1), recall 0.00% (0/352)**. See the
+  [run result](RESULTADO-PRACTICA-ALMA-V232-20261022.md) and the
+  [complete ALMA adjudication](ADJUDICACION-COMPLETA-311-20261022.md).
+- **Autopsy at US$0:** replaying gate 1.4.1 over the baseline's 166 findings
+  accepted **0**, firmly rejected **17**, and left **149 (89.8%)** in
+  `needs_validation`; the dominant cause was structural — the gate had no
+  verification rule for the reviewer's general claim categories. See the
+  [gate 1.4.1 replay](REPLAY-PUERTA-141-20261022.md).
+- **Gate 1.5.0 was built and not adopted:** its pre-registered replay emitted
+  32 findings at **59.4% precision among emitted**, but **80.1%** of claims
+  still waited in `needs_validation` against a bar of **<50%**. Confirmed
+  false positives died at **75.0%** and true positives at **78.7%** — practical
+  parity, not useful discrimination. See the [pre-registration](PREREGISTRO-PUERTA-150.md)
+  and the [replay result](RESULTADO-REPLAY-150-20261022.md).
+- **The bottleneck moved to claim birth:** only **49/166** existing claims
+  could be made contract-conforming without inventing evidence; all 49 then
+  passed gate 1.5.0 (**49/49**). The composed pipeline still failed its bar
+  (70.5% waiting; 53.1% precision among emitted), although confirmed false
+  positives died at **75.0%** versus **70.8%** for true positives — the first
+  favorable separation measured in this line, on small sets. See the
+  [claim-contract pre-registration](PREREGISTRO-CONTRATO-RECLAMOS.md) and the
+  [contract result](RESULTADO-CONTRATO-RECLAMOS-20261022.md).
+- **Recorded next step, not another downstream filter:** enforce the claim
+  contract when the reviewer creates each finding. That producer-side design
+  is pre-registered in the [contract-native reviewer paper](PREREGISTRO-REVISOR-CONTRATO.md);
+  no result is claimed for it here.
+
 **Estado al 2026-10-19 (v1 CERRADA):** el agente `alma-reviewer` fue
 registrado y **aprobado** — el mantenedor fusionó el PR #89 el 2026-10-19 —
 y la imagen se publicó en GHCR por digest

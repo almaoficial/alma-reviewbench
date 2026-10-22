@@ -6,8 +6,10 @@ Pre-registro: [`PREREGISTRO-REVIEWBENCH-V23.md`](PREREGISTRO-REVIEWBENCH-V23.md)
 2026-10-22 a las 07:37 EDT — «Lo hagamos» — que pre-registra esta
 reparación, su falsador y el relanzamiento del brazo ALMA)
 
-**Estado de este manifiesto: ABIERTO — código publicado y verificado;
-imagen PENDIENTE de construcción.** El commit del paquete v2.3.2 está
+**Estado de este manifiesto: CERRADO** (con la enmienda de cierre al
+final: imagen construida y verificada en dos fuentes, y corrida
+nº 311 corrida con esa imagen). *Texto original al abrirlo:* El
+commit del paquete v2.3.2 está
 en `main` (ver el sobre) y los 10 archivos quedaron verificados
 byte a byte contra el remoto (sha256 y SHA de blob, 10/10). El
 workflow `reviewbench-image` es solo disparo manual
@@ -28,8 +30,10 @@ relanzamiento del brazo ALMA — el último acto del papel v2.3.
 
 - **Commit:** `8ae47d402b8300d02ad427c0cc2fdd68cc6eb9ae` (main de
   `almaoficial/alma-reviewbench`, sobre la cabeza previa `cc56817`).
-- **Imagen (digest):** **PENDIENTE** — `ghcr.io/almaoficial/alma-reviewbench@sha256:<pendiente del disparo del workflow reviewbench-image sobre 8ae47d4>`.
-  Reemplazará a la v2.3.1 (`sha256:144756cea49ee33e8b16ddb0204556adb0f1c2430ea885ec6a206bbaa6964544`).
+- **Imagen (digest):** `ghcr.io/almaoficial/alma-reviewbench@sha256:fbf1fe48364f915fed703a0a618bea48e0e7b379f7afaa645b8b4bf712850498`
+  (construida por el workflow `reviewbench-image`, corrida nº 8, y
+  verificada en dos fuentes — detalle en la enmienda de cierre).
+  Reemplazó a la v2.3.1 (`sha256:144756cea49ee33e8b16ddb0204556adb0f1c2430ea885ec6a206bbaa6964544`).
 - **Revisor:** `llm-reviewer/2.3.2` (constante `REVIEWER_VERSION` en
   `agent/llm_reviewer_v23.py`, sha256 del archivo `a78bdd6d…`).
 - **Puerta del brazo ALMA:** 1.4.1, POLICY_SHA256
@@ -94,3 +98,33 @@ propio commit).
   su digest, la enmienda de cierre de este manifiesto. Hasta ese
   cierre, la config ALMA del portal NO se toca: sigue apuntando a
   la imagen v2.3.1.
+
+## Enmienda de cierre — imagen construida y corrida nº 311 (2026-10-22)
+
+- **Imagen construida:** el workflow `reviewbench-image` se disparó
+  manualmente (`workflow_dispatch`, la compuerta humana de diseño) y
+  su **corrida nº 8 cerró SUCCESS**:
+  https://github.com/almaoficial/alma-reviewbench/actions/runs/39775599211
+- **Digest verificado en dos fuentes** (idéntico en ambas):
+  `ghcr.io/almaoficial/alma-reviewbench@sha256:fbf1fe48364f915fed703a0a618bea48e0e7b379f7afaa645b8b4bf712850498`
+  — resumen de la corrida nº 8 de Actions y página del paquete GHCR
+  (versión `1428141056`, tag `dev`).
+- **Cabeza de main al disparo: `276051e`** — incluye el commit del
+  sobre (`8ae47d4`) más los asientos documentales posteriores; la
+  imagen se construyó desde esa cabeza, no desde `8ae47d4` pelado.
+- **Corrida nº 311 con esta imagen:** el relanzamiento del brazo
+  ALMA autorizado por la Adenda 4 corrió con esta imagen exacta
+  (config ALMA del portal actualizada **solo** en el campo de
+  imagen y releída campo por campo: «llm · alma · gpt-5.6-sol ·
+  medium · v23 · v141»). Compuerta de saldo verificada en el acto:
+  **US$25,58** previos (≥ US$25). Resultado: **SUCCEEDED**, titular
+  augmented del portal P 0 % · R 0 % con 1 hallazgo, **costo real
+  US$20,27** por diferencia de saldo (cierre formal:
+  `RESULTADO-PRACTICA-ALMA-V232-20261022.md`; efecto de la puerta
+  adjudicado en `ADJUDICACION-COMPLETA-311-20261022.md` — regla de
+  avance variante (ii): **NO PASA**).
+- **Estado de este manifiesto: CERRADO.** La publicación v2.3.2
+  queda completa: código verificado (sobre), imagen verificada
+  (esta enmienda) y corrida del último acto del papel v2.3 corrida
+  y adjudicada. Este cierre es documental y local; su asiento en el
+  REGISTRO acompaña esta enmienda.
