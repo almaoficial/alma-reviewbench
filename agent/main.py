@@ -24,12 +24,18 @@ from .alma_gate_v13 import (
     POLICY_VERSION as POLICY_VERSION_V13,
     AlmaGateV13,
 )
+from .alma_gate_v14 import (
+    POLICY_SHA256 as POLICY_SHA256_V14,
+    POLICY_VERSION as POLICY_VERSION_V14,
+    AlmaGateV14,
+)
 from .base_reviewer import BaseReviewer, Candidate
 from .diff_parser import parse_unified_diff
 from .llm_reviewer import LLMReviewer, RealLLMRefused
 from .llm_reviewer_v2 import LLMReviewerV2
 from .llm_reviewer_v21 import LLMReviewerV21
 from .llm_reviewer_v22 import LLMReviewerV22
+from .llm_reviewer_v23 import LLMReviewerV23
 
 
 # Backwards-compatible name: the mock-first package raised this when
@@ -44,6 +50,12 @@ class RunResult:
     candidates: list[Candidate]
     ledger: list[dict[str, object]]
     llm_run_info: dict[str, object] | None = None
+    # Gate 1.4.0 only: the held candidates (needs_validation records,
+    # as dicts).  None for every other gate — the ledger file then
+    # keeps its historical bare-list shape; a list (possibly empty)
+    # makes the ledger file an object with a separate
+    # "needs_validation" section, never mixed into the findings.
+    needs_validation: list[dict[str, object]] | None = None
 
 
 def _select_gate(config: Mapping[str, str]):
@@ -58,8 +70,11 @@ def _select_gate(config: Mapping[str, str]):
     the same hardened checks, delegated to the 1.2.0's own function,
     plus the class hunter's 5 best-ranked classes — weak_hash,
     tarfile_unsafe_extract, hardcoded_password_argument,
-    jwt_verification_disabled, debug_mode_enabled).  The gate exists
-    only in the ALMA arm; the base arm bypasses any gate."""
+    jwt_verification_disabled, debug_mode_enabled); "v14" is
+    alma-evidence-gate/1.4.0 (PREREGISTRO-PUERTA-140.md: the 1.3.0 by
+    delegation plus the third state needs_validation, extended to
+    general categories by PREREGISTRO-REVIEWBENCH-V23.md).  The gate
+    exists only in the ALMA arm; the base arm bypasses any gate."""
 
     gate_version = (config.get("gate") or "v1").strip().lower()
     if gate_version == "v1":
@@ -70,9 +85,11 @@ def _select_gate(config: Mapping[str, str]):
         return AlmaGateV12()
     if gate_version == "v13":
         return AlmaGateV13()
+    if gate_version == "v14":
+        return AlmaGateV14()
     raise ValueError(
         f"unknown gate version {gate_version!r}; "
-        "expected 'v1', 'v11', 'v12' or 'v13' (RB_CONFIG_GATE)"
+        "expected 'v1', 'v11', 'v12', 'v13' or 'v14' (RB_CONFIG_GATE)"
     )
 
 
@@ -174,7 +191,12 @@ def run_agent(
         # PREREGISTRO-REVIEWBENCH-V22.md (design C2: a selection pass
         # over the diff alone marks <=5 classes, the v2's deep passes
         # run only for those, and a pre-registered degradation rule
-        # replaces the v2 guard's blanket refusal).
+        # replaces the v2 guard's blanket refusal);
+        # "v23" is the generalized-selection reviewer of
+        # PREREGISTRO-REVIEWBENCH-V23.md (path A: the selection marks
+        # the benchmark's nine public general categories alongside
+        # the 19 specialty classes, under the same shared cap of 5
+        # deep passes and the same degradation rule).
         # All of them feed the identical gate.
         effective_env = dict(os.environ) if env is None else env
         reviewer_version = (config.get("reviewer") or "v1").strip().lower()
@@ -238,10 +260,27 @@ def run_agent(
                     or "/work/repo"
                 ),
             )
+        elif reviewer_version == "v23":
+            reviewer = LLMReviewerV23.from_env(
+                effective_env,
+                config,
+                transport=llm_transport,
+            )
+            candidates = reviewer.review(
+                diff_text=diff_text,
+                diff=diff,
+                config=config,
+                mode=mode,
+                repo_root=(
+                    config.get("repo_root")
+                    or effective_env.get("RB_REPO_ROOT")
+                    or "/work/repo"
+                ),
+            )
         else:
             raise ValueError(
                 f"unknown reviewer version {reviewer_version!r}; "
-                "expected 'v1', 'v2', 'v21' or 'v22' (RB_CONFIG_REVIEWER)"
+                "expected 'v1', 'v2', 'v21', 'v22' or 'v23' (RB_CONFIG_REVIEWER)"
             )
         if reviewer.last_run_info is not None:
             llm_run_info = reviewer.last_run_info.to_dict()
@@ -249,10 +288,14 @@ def run_agent(
         raise ValueError(f"unknown backend {backend!r}; expected 'mock' or 'llm'")
 
     gate = _select_gate(config)
+    needs_validation: list[dict[str, object]] | None = None
     if mode == "alma":
         gate_result = gate.validate(candidates, diff, agent_name)
-        findings = gate_result.findings
+        findings = list(gate_result.findings)
         ledger = [entry.to_dict() for entry in gate_result.ledger]
+        held = getattr(gate_result, "needs_validation", None)
+        if held is not None:
+            needs_validation = [record.to_dict() for record in held]
     else:
         findings = [candidate_to_finding(candidate, agent_name) for candidate in candidates]
         ledger = [
@@ -292,7 +335,11 @@ def run_agent(
     }
     validate_output(output)
     return RunResult(
-        output=output, candidates=candidates, ledger=ledger, llm_run_info=llm_run_info
+        output=output,
+        candidates=candidates,
+        ledger=ledger,
+        llm_run_info=llm_run_info,
+        needs_validation=needs_validation,
     )
 
 
@@ -311,7 +358,9 @@ def _print_applied_config(config: Mapping[str, str], mode: str, backend: str) ->
     # value and fails closed on an unknown one, so an unrecognized value
     # is only labelled here, never silently mapped to a real gate.
     gate_version = (config.get("gate") or "v1").strip().lower()
-    if gate_version == "v13":
+    if gate_version == "v14":
+        validator, policy_sha256 = POLICY_VERSION_V14, POLICY_SHA256_V14
+    elif gate_version == "v13":
         validator, policy_sha256 = POLICY_VERSION_V13, POLICY_SHA256_V13
     elif gate_version == "v12":
         validator, policy_sha256 = POLICY_VERSION_V12, POLICY_SHA256_V12
@@ -402,8 +451,18 @@ def main(argv: list[str] | None = None) -> int:
             ledger_path = out_path.with_name("alma-ledger.json")
         if ledger_path is not None:
             ledger_path.parent.mkdir(parents=True, exist_ok=True)
+            if result.needs_validation is not None:
+                # Gate 1.4.0: the held candidates live in their own
+                # section of the ledger file, never among the
+                # accepted/rejected entries and never in the findings.
+                ledger_payload: object = {
+                    "ledger": result.ledger,
+                    "needs_validation": result.needs_validation,
+                }
+            else:
+                ledger_payload = result.ledger
             ledger_path.write_text(
-                json.dumps(result.ledger, indent=2, ensure_ascii=False) + "\n",
+                json.dumps(ledger_payload, indent=2, ensure_ascii=False) + "\n",
                 encoding="utf-8",
             )
         return 0
