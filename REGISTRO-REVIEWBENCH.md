@@ -221,3 +221,263 @@ de 25 PRs.
   `GUION-PORTAL-V21.md`), el freno US$6,50 efectivamente cargado en
   Credentials de cada configuración y el «sí» de Alejandro al momento
   de lanzar.
+
+### Práctica v2.1 — brazo base nº 290 y linterna (2026-10-21)
+
+- Configuraciones actualizadas en el portal según `GUION-PORTAL-V21.md`
+  (imagen v2.1 `sha256:32da7c01…`, labels `reviewer=v21`/`gate=v13` en
+  ambas; único campo distinto = `governance`). Alejandro dio el «Corre»
+  y la base se lanzó con «Test run» («Submit» jamás tocado).
+- **Corrida nº 290 (base): SUCCEEDED** — lanzada 2026-10-21 18:00:52
+  EDT. Puntajes del portal: **precisión 37,5 % · recall 0,4 %** · F1
+  ≈0,8 % (calculado; el portal no lo muestra) · 8 hallazgos, 3
+  novedosos. Primera práctica de un revisor post-v1 que completa y
+  puntúa.
+- **PRUEBA DE LA LINTERNA: NO PASA** (recall base 0,4 % ≤ 0,7 % de la
+  v1). Por el papel v2.1 §3, el brazo ALMA **no se lanzó** y la
+  práctica v2.1 queda **SIN VEREDICTO VÁLIDO** sobre «ALMA mejora»: la
+  regla de avance no se aplica con un base que no ve.
+- **Causa declarada:** dilución C1 en PRs reales — el riesgo de la
+  Adenda 6 y falsador de la §6 del papel v2.1. La pasada única vio 7/8
+  en la batería miniatura (semáforo VERDE) pero se diluye en contextos
+  reales grandes. La economía quedó resuelta (sin negativas de la
+  guardia); el problema es la vista, no el costo.
+- Detalle completo en `RESULTADO-PRACTICA-V21-20261021.md`. Salida
+  según el papel: C2 (triage + pasadas profundas ≤5) con su propio
+  pre-registro (`PREREGISTRO-REVIEWBENCH-V22.md`) — decisión de
+  Alejandro del 21/10, 18:30 EDT.
+
+### Cierre del manifiesto v2.2 — imagen publicada (2026-10-21)
+
+- El workflow `reviewbench-image` (corrida nº 5) corrió sobre `main` @
+  `031dd0f` y publicó la imagen v2.2 en GHCR: el tag `dev` resuelve a
+  `ghcr.io/almaoficial/alma-reviewbench@sha256:577bc2ec6780c5af4d3260caad74d3bd06b73dedf5b4e616ddbe03e44880206a`
+  (digest completo, 64 caracteres), **verificado contra GHCR el
+  2026-10-21** con token anónimo (fuente primaria: cabecera
+  Docker-Content-Digest; contenido verificado: la imagen incluye
+  `app/agent/llm_reviewer_v22.py`). La corrida nº 5 cerró
+  completed/success con head_sha `031dd0f37bdb…` y esta vez sin la
+  espera de la nº 4: creada 23:39:33 UTC, cerrada 23:40:04 UTC.
+- `MANIFIESTO-V22.md` cerrado: el campo «Imagen (digest)» quedó asentado
+  con ese digest y el manifiesto se subió al repo con commit
+  `cc4dbc8a679cd739673bbecec46b96f944857a56` en `main` (conector oficial
+  de GitHub, `push_files`; lectura de vuelta verificada contra el
+  repo). Clon local sincronizado en ese commit.
+- **Estado: imagen v2.2 publicada, digest asentado, práctica v2.2 por
+  lanzar** — pendiente actualizar las configuraciones del portal
+  (guion `GUION-PORTAL-V22.md`: imagen v2.2 `sha256:577bc2ec…`, labels
+  `reviewer=v22`/`gate=v13` en ambas; único campo distinto =
+  `governance`) y el «Corre» de Alejandro al momento de lanzar.
+  Semáforo v2.2 VERDE asentado en el manifiesto (base 7/8 · ALMA 6/8 ·
+  US$0,6221; triage 16/16; señal del brazo ALMA declarada con su
+  anatomía de sem_01/sem_02).
+
+### Práctica v2.2 — base nº 295 y linterna (2026-10-21)
+
+- **Corrida nº 295 (base v22): SUCCEEDED** — lanzada 2026-10-21 19:57:18 EDT, config «llm · base · gpt-5.6-sol · medium · v22 · v13», imagen `sha256:577bc2ec…`. Verificado en el portal (review-bench.ai, alma-reviewer) en la vigilancia de las 20:10–20:26 EDT: estado verbatim «succeeded».
+- **Puntajes del portal:** Grounded F1 0,0 % · Precision 0,0 % · Recall 0,0 %; Augmented F1 0,8 % · Precision 15,0 % · Recall 0,4 %; duración promedio 7 s; findings 11 (3 novel).
+- **PRUEBA DE LA LINTERNA: NO PASA** — recall_base grounded 0,0 % (y augmented 0,4 %) ≤ 0,007 (0,7 %). Por el papel v22, el brazo ALMA **no se lanzó** y la práctica v2.2 queda **SIN VEREDICTO VÁLIDO** sobre «ALMA mejora»: la regla de avance no se aplica con un base que no ve.
+- No existe ninguna corrida v22 más nueva que la #295 en ninguna configuración; la corrida ALMA más reciente sigue siendo la #253 del 19/10 (failed at score). No se tocó «Submit» ni credenciales ni el freno.
+- **Falsador propio de C2 (§7):** en la evidencia disponible del portal (lista y puntajes) no se observaron eventos de degradación/truncación asentados; no se gatilla con la evidencia disponible — queda marcado como no verificado a nivel de outputs por PR.
+- Detalle completo en `RESULTADO-PRACTICA-V22-20261021.md`. La vigilancia `vigilar-practica-v22-reviewbench` se elimina en esta misma pasada, como manda el protocolo ante linterna fallida.
+
+### Semáforo v2.3 — SOLO brazo base: VERDE (2026-10-21)
+
+- **Corrida:** revisor v2.3 (`RB_CONFIG_REVIEWER=v23`, `gate=v13`
+  declarado/omitido — brazo base), gpt-5.6-sol effort medium, sobre
+  la batería congelada (hashes 32/32 verificados; suite previa
+  208/208 en seco; sonda de clave HTTP 200). Autorización de
+  Alejandro 21/10 21:35 EDT; clave por la vía sancionada
+  (`custom.openai-rbench`, sustituto solo en el entorno).
+- **Brazo ALMA NO corrido, por papel:** la puerta 1.4.0 no pasó su
+  medición de adopción (falsos nuevos = 1; `RESULTADO-MEDICION-PUERTA-140.md`)
+  y la §4 del papel v2.3 prohíbe sustituirla por la 1.3.0. El
+  veredicto se declara solo sobre el brazo base.
+- **Resultado base: 16 emitidos, 8/8 detectados, US$0,53607**
+  (tope duro US$20). 26 llamadas (8 selección + 18 profundas);
+  degradación en 0/8, negativas 0/8, malformed/unanchored 0.
+- **Marcas por familia:** especialidad 8/8 (siempre la plantada);
+  general `security` 8/8 y `reliability` 2/8. Detección por vía de
+  especialidad: 7/8. **sem_02: el silencio de la profunda de
+  `hardcoded_secret` reapareció** (cuarto semáforo consecutivo),
+  pero la pasada general `security` produjo el hallazgo
+  (`app/billing.py:6`) y el caso puntuó — rescate por la vía nueva,
+  asentado con su anatomía. sem_01 sin novedad: el rechazo de cita
+  es fenómeno del brazo ALMA, que no corrió.
+- **Declaración §9:** este semáforo afirma mecánica, economía en
+  miniatura y que la vía de especialidad sobrevivió al ensanche;
+  NO afirma detección general (la batería no tiene TP generales) y
+  no predice recall en la práctica. Comparación base: v2 8/8 ·
+  v2.1 7/8 · v2.2 7/8 · v2.3 8/8.
+- **Consecuencia:** procede publicación v2.3 y práctica del brazo
+  base (base primero, linterna) con el «sí» de Alejandro al lanzar;
+  el brazo ALMA sigue bloqueado hasta un papel nuevo de puerta.
+  Detalle completo en `RESULTADO-SEMAFORO-V23-20261021.md`; crudos
+  en `runs/semaforo-v23-20261021/`.
+
+### Publicación v2.3 — código en el repo; imagen y portal pendientes de UI (2026-10-21)
+
+- **Autorización:** Alejandro, 21/10/2026 21:47 EDT («Publicar la
+  v2.3 (base)»), tras el semáforo VERDE del brazo base.
+- **Verificación previa al push (en seco, US$0):** suite completa
+  **208/208** (163 heredadas + 27 de la puerta 1.4.0 + 18 del revisor
+  v2.3); puertas congeladas byte-idénticas por sha256 — 1.0.0
+  `4223cb05…`, 1.1.0 `fdd974f1…`, 1.2.0 `c5c32bfc…`, 1.3.0
+  `d3b993d4d4f26b9df112dfd54abc391e8018faae024d23c63b4924d86d2dc1e0`
+  (POLICY_SHA256 1.3.0
+  `0a711435adb3bc449da5d2b410f6511b7b70de7be5e55604ffca2e1946eddf78`).
+  El `agent/main.py` local se cotejó contra el remoto @ `cc4dbc8`:
+  difiere solo en los agregados v2.3 (selector `reviewer=v23`,
+  selector `gate=v14`, sección `needs_validation` del ledger).
+- **Push (conector de GitHub, `push_files`; la VM no tiene
+  credenciales de push):** commit
+  **`a6838e60df8d754f361eb10e38eff815ae60708b`** en `main`, padre
+  `cc4dbc8`, con 11 archivos: `agent/llm_reviewer_v23.py`,
+  `agent/alma_gate_v14.py`, `agent/main.py`, `tests/test_gate_v14.py`,
+  `tests/test_llm_reviewer_v23.py`, `medir_adopcion_v14.py`,
+  `PREREGISTRO-REVIEWBENCH-V23.md`, `PREREGISTRO-PUERTA-140.md`,
+  `PREREGISTRO-PUERTA-141.md`, `RESULTADO-MEDICION-PUERTA-140.md`,
+  `RESULTADO-SEMAFORO-V23-20261021.md`. Verificado por relectura del
+  repo: `agent/` remoto contiene `llm_reviewer_v23.py` y
+  `alma_gate_v14.py` en ese commit. `fixtures_semaforo/` NO viajó
+  (Push Protection), como en todas las publicaciones.
+- **Imagen: PENDIENTE.** El workflow `reviewbench-image` es
+  `workflow_dispatch` — se dispara desde la UI de GitHub Actions y la
+  API de esta VM no puede (403, confirmado en v2.1/v2.2). Hasta que
+  el workflow corra sobre `main` @ `a6838e6` y el digest se verifique
+  contra GHCR (tag `dev` → digest; contenido con
+  `app/agent/llm_reviewer_v23.py`), el campo «Imagen (digest)» de
+  `MANIFIESTO-V23.md` queda **PENDIENTE** y no hay commit de cierre.
+- **Portal: SIN TOCAR todavía.** Preparado `GUION-PORTAL-V23.md`:
+  cuando exista el digest verificado, se actualiza SOLO la
+  configuración base (imagen nueva; labels `backend=llm`,
+  `governance=base`, `model=gpt-5.6-sol`, `effort=medium`,
+  `reviewer=v23`, `gate=v13`; guardar y releer). La configuración
+  ALMA **no se actualiza** (brazo bloqueado: puerta 1.4.0 NO
+  adoptada — 1 falso nuevo, S3 — según
+  `RESULTADO-MEDICION-PUERTA-140.md`). `RB_MAX_SPEND_USD` no se leyó
+  ni se modificó. No se lanzó ninguna corrida; «Submit» intacto.
+- **Manifiesto:** `MANIFIESTO-V23.md` redactado con el sobre completo
+  y las declaraciones honestas (semáforo VERDE solo del brazo base,
+  con el rescate de sem_02 por la vía general y la especialidad sola
+  en 7/8; puerta 1.4.0 construida y medida pero NO ADOPTADA; brazo
+  ALMA bloqueado; papel 1.4.1 escrito, sin construir). Su push viaja
+  en el commit de cierre, con el digest asentado, como en la v2.2.
+- **Siguiente paso (bloqueo exacto):** disparo del workflow
+  `reviewbench-image` desde la UI de GitHub Actions — paso de
+  navegador con la sesión de Alejandro, fuera del alcance de esta
+  pasada. Con el digest verificado: commit de cierre del manifiesto,
+  ejecución del guion del portal (solo base) y práctica v2.3 del
+  brazo base con el «Corre» de Alejandro al lanzar.
+
+### Puerta 1.4.1 — construida en seco y ADOPTADA en su medición (2026-10-21)
+
+- **Autorización:** Alejandro, 21/10/2026 21:49 EDT («Sí al papel
+  1.4.1 — construirla en seco»): solo construcción en seco +
+  medición offline (US$0, sin portal, sin publicar).
+- **Construcción:** `agent/alma_gate_v141.py` (delegación a la
+  1.3.0; selector `RB_CONFIG_GATE=v141` en `agent/main.py`, default
+  sin cambio) — `POLICY_VERSION: alma-evidence-gate/1.4.1`,
+  `POLICY_SHA256: 73a403d853fca843f06d289e90b5dd7e93dde8b469ad3da7b06bb8448c64db46`.
+  Cambio único del §2 del papel: el chequeo (f) «sin línea agregada»
+  sale de los chequeos de completitud — candidato de clase sin
+  ninguna línea agregada en su evidencia = **rechazo firme** en la
+  frontera, dominante sobre (a)/(b); habilitantes del tercer estado
+  quedan solo (a) co-ocurrencia y (b) construcción fuera del span.
+  Registro `needs_validation` sin `severity`, con blockers, igual
+  que la 1.4.0; la extensión a hallazgos generales NO se tocó.
+- **Suite: 236/236 verde** (208 heredadas + 28 nuevas de
+  `tests/test_gate_v141.py`, con las categorías del §4: tipo S3 →
+  rechazo firme; tipo VP con línea agregada y co-ocurrencia partida
+  → sigue `needs_validation`; mixto (f)+(a) → rechazo firme por
+  dominancia).
+- **Medición de adopción (§4, instrumento `medir_adopcion_v141.py`,
+  tres universos re-corridos completos): ADOPTADA** — VP
+  recuperados = **4, los mismos 4** de la medición de la 1.4.0
+  (sem_01 `sql_injection` en ambos brazos de ambas corridas,
+  blocker `co_occurrence`; U1: primario 2 + secundario 2, falsos
+  U1 = 0, sanidad del re-juicio 1.3.0 OK); falsos nuevos = **0** en
+  los tres universos; equivalencia exacta de aceptados con la
+  1.3.0 en los tres universos; U2 (69 ataques) y U3 (36 candidatos)
+  con **cero movimientos** de estado. **S3: rechazado en la 1.3.0 →
+  rechazado en la 1.4.1, sin movimiento**, causal (f) asentada en
+  sus razones (bajo la 1.4.0 era el único movimiento y el falso que
+  la dejó no adoptada).
+- **Invariantes:** puertas 1.0.0–1.3.0 y 1.4.0 byte-idénticas al
+  cierre (archivo 1.4.0 sha256 `b16c5a79…`, POLICY `b0c0aa66…`);
+  papeles intactos. Detalle completo en
+  `RESULTADO-MEDICION-PUERTA-141.md`.
+- **Consecuencia (§6 del papel):** adoptada ≠ en uso — el brazo
+  ALMA de la v2.3 sigue sin correr hasta que exista la adenda
+  firmada al papel v2.3 que declare el reemplazo de la 1.4.0 por la
+  1.4.1 y la etiqueta `gate=v141`, anterior a cualquier corrida
+  ALMA. Nada se corrió ni se publicó con ella.
+
+### Adenda 1 al papel v2.3 — puerta del brazo ALMA: 1.4.0 → 1.4.1 (`gate=v141`) (2026-10-21)
+
+- **Firma:** Alejandro, 21/10/2026 21:56 EDT («Firmar la adenda
+  (gate=v141)»). Es la adenda que la §6 del
+  `PREREGISTRO-PUERTA-141.md` exigía antes de cualquier corrida
+  ALMA; quedó agregada al final del `PREREGISTRO-REVIEWBENCH-V23.md`
+  sin alterar ni una línea del cuerpo original.
+- **Declara:** la 1.4.0 fue construida y medida y **NO adoptada**
+  (recibo `RESULTADO-MEDICION-PUERTA-140.md`: VP = 4, equivalencia
+  exacta, 1 falso = S3), por lo que el brazo ALMA no podía correr
+  con ella; la 1.4.1 fue pre-registrada, construida en seco y
+  **ADOPTADA** (recibo `RESULTADO-MEDICION-PUERTA-141.md`: VP = los
+  mismos 4, falsos = 0, S3 rechazado firme sin movimiento,
+  equivalencia exacta, suite 236/236); en consecuencia la puerta
+  del brazo ALMA de la v2.3 es la **`alma-evidence-gate/1.4.1`**,
+  etiqueta de config **`gate=v141`** (módulo
+  `agent/alma_gate_v141.py`, selector `RB_CONFIG_GATE=v141`). La
+  etiqueta `v14` queda atada para siempre al artefacto 1.4.0.
+- **Intacto:** todo lo demás del papel v2.3 — variante (ii)
+  `needs_validation`, regla de avance de la §6 (linterna R_base
+  grounded > 0,7 % primero; P_ALMA ≥ P_base + 0,05; pureza de
+  retención; pérdida inexplicada = 0), orden base → linterna →
+  ALMA, frenos y topes.
+- **Secuencia pendiente:** el código v141 todavía NO está en la
+  imagen publicada (la imagen v2.3 en curso contiene la 1.4.0);
+  correr el brazo ALMA requerirá publicar el código v141 en una
+  imagen verificada y editar la config ALMA del portal con
+  `gate=v141` — pasos futuros, cada uno con su verificación, y solo
+  pertinentes si la práctica base supera la linterna. La adenda no
+  autoriza ninguna corrida. Gasto: US$0.
+
+### Cierre de la publicación v2.3 — imagen verificada y config base del portal (2026-10-21)
+
+- **Workflow:** `reviewbench-image` **corrida nº 6** —
+  https://github.com/almaoficial/alma-reviewbench/actions/runs/39708506752
+  — disparada y cerrada el **2026-10-21 21:55–21:56 EDT**, resultado
+  **SUCCESS**, sobre `main` @ `a6838e6`, inputs `tag=dev`,
+  `package_dir=.`.
+- **Digest verificado y asentado:**
+  `ghcr.io/almaoficial/alma-reviewbench@sha256:932ac3ffa1944d92cb4defd5b96b7b1146eb37bdd3b4245676039e7844b40e27`
+  (64 caracteres, sin truncar). Método: el digest lo imprimió el
+  resumen del workflow y se cotejó contra la **página del paquete en
+  GHCR** (versión `1425525285`, tag `dev`) — esa página es la
+  constancia registral usada. Contenido verificado por la cadena de
+  build: el commit `a6838e6` contiene `agent/llm_reviewer_v23.py`
+  (977 líneas), el Dockerfile copia `agent/` a `/app/agent` y
+  `.dockerignore` no excluye `agent/`. **Salvedad declarada:** la API
+  `/v2` de GHCR con token anónimo devolvió 401 por header en
+  navegación y no se usó como constancia; es el mismo método de
+  cierre que cerró la v2.1 y la v2.2. El digest quedó asentado en el
+  campo «Imagen (digest)» de `MANIFIESTO-V23.md` (commit de cierre).
+- **Config base del portal — relectura campo por campo tras guardar
+  (verbatim):** imagen =
+  `ghcr.io/almaoficial/alma-reviewbench@sha256:932ac3ffa1944d92cb4defd5b96b7b1146eb37bdd3b4245676039e7844b40e27`
+  (el digest completo); labels exactos: `backend=llm`,
+  `governance=base`, `model=gpt-5.6-sol`, `effort=medium`,
+  `reviewer=v23`, `gate=v13`; fila del leaderboard:
+  `rowalma-reviewer-llm-base-gpt-5-6-sol-medium-v23-v13`.
+- **Constancias:** la configuración **ALMA no fue modificada** en
+  esta publicación (queda con la imagen v2.2, `reviewer=v22`,
+  `gate=v13`); `RB_MAX_SPEND_USD` **no fue leído ni modificado**
+  (siguió enmascarado en todo momento); **ninguna corrida fue
+  lanzada** y **«Submit» no fue tocado**.
+- **Estado:** publicación v2.3 **cerrada** — código (`a6838e6`),
+  imagen (digest verificado) y config base del portal alineados. La
+  práctica («Test run», 25 PRs, solo brazo base) espera el «Corre»
+  expreso de Alejandro; la linterna sigue siendo recall base grounded
+  > 0,7 % sobre 352 TP. Gasto de este cierre: US$0.
