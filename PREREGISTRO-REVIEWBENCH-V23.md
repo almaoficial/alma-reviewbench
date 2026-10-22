@@ -824,3 +824,355 @@ PR (US$6,50) y el tope del semáforo (US$20) quedan como están.
   conocidos; no lo elimina), ni que la linterna pase. La predicción
   de la §8 sigue siendo la del papel; la adjudicación parcial, con
   su sesgo declarado, sugiere que era pesimista. La corrida manda.
+
+
+---
+
+## ADENDA 3 — Lectura de la colisión linterna/§8: la economía cierra la línea del revisor, no la medición de la puerta
+
+**Fecha:** 2026-10-22 · **Firma:** Alejandro, el 22/10/2026, por el
+chat («Adenda de lectura y que corra ALMA»), tras recibir la
+adjudicación completa de la nº 298 que él mismo encargó «antes de
+decidir». Se agrega al final del papel, fechada, **sin alterar ni
+una línea del cuerpo original ni de las Adendas 1–2**, según el
+formato de la casa. **Recibos:**
+`RESULTADO-PRACTICA-V231-20261022.md` (cierre formal de la nº 298:
+SUCCEEDED; costo real US$20,41; falsador de economía registrado
+gatillado), `ADENDA-RESULTADO-PRACTICA-V231-20261022.md` (linterna
+acreditada por cota inferior) y
+`ADJUDICACION-COMPLETA-298-20261022.md` (el par grounded exacto de
+la base v2.3.1). **Esta adenda no lanza nada:** resuelve una
+colisión entre dos textos pre-registrados de este mismo papel y
+declara, antes de cualquier lanzamiento, la corrida que queda
+habilitada y cómo se la mide. La corrida ALMA sigue sujeta a su
+compuerta de saldo y al «sí» de Alejandro al lanzar, como manda la
+§11.
+
+### 1. Los dos hechos, sin maquillaje
+
+**(i) La linterna PASÓ — por conteo completo, no por cota.** La
+regla (§6, componente 1, heredada sin cambios por la Adenda 1):
+R_base grounded > 0,7 % sobre 352 TP gold, es decir ≥ 3 TP
+distintos cubiertos. La nº 298 (base v2.3.1, SUCCEEDED, 25/25 PRs,
+166 emisiones) fue adjudicada completa contra el gold público, con
+el método de la casa: **66 TP gold distintos cubiertos — recall
+grounded 18,75 %**, precisión grounded **53,6 %** (89/166), F1
+**27,8 %**. La predicción de la §8 (R 1–3 %, P 10–40 %) quedó por
+debajo del resultado en ambas bandas, y el **falsador principal
+del §8 — el encuadre — NO se gatilló**. El 100 % del recall vino de
+la vía general: la especialidad de 19 clases aportó **0 emisiones
+y 0 TP** en la práctica completa (la selección marcó clases en
+3/25 PRs; dos las perdieron por degradación y la única pasada de
+especialidad ejecutada, `sql_injection` en CrabTrap, no produjo
+una sola emisión de su clase).
+
+**(ii) El falsador de economía del §8 quedó GATILLADO en los
+hechos, y así queda registrado para siempre.** Su texto:
+«degradación declarada en más de 1/4 de los PRs de la práctica →
+la economía tampoco cierra con revisor general: registrar y
+detener». La nº 298 declaró degradación en **10 de 25 PRs
+(40 % > 1/4)**: 9 por `spend_cap` y el caso extremo de **emdash**
+por `no_deep_pass_affordable` — las 5 pasadas profundas fuera del
+freno, 0 hallazgos emitidos sobre 6 TP gold, un fallo de economía
+y no de detección. El cierre formal lo registró gatillado y esta
+adenda **no lo des-asienta, no lo borra ni lo reinterpreta
+retroactivamente**: el hecho medido (40 %) es el hecho medido,
+con su nombre y su texto, para cualquier lector futuro del papel.
+
+### 2. La lectura (por qué los dos hechos no se contradicen)
+
+La colisión es aparente solo si el falsador de economía se lee
+como una prohibición genérica de seguir corriendo. Leído con su
+propio texto, el falsador tiene **una afirmación y una
+consecuencia**, y ambas nombran su objeto:
+
+- **La afirmación:** «la economía **tampoco cierra con revisor
+  general**». Es una afirmación sobre la **viabilidad económica
+  de la línea del revisor general** — la misma línea cuya
+  hipótesis de encuadre juzga el falsador principal, y cuya
+  economía la hipótesis 2 de este papel pre-registró («conservar
+  la disciplina de la v2.2 mantiene la práctica dentro del tope»).
+- **La consecuencia:** «registrar y detener» obliga sobre la
+  pretensión que la afirmación nombra: **detener la línea del
+  revisor general como empresa viable** — su continuación:
+  nuevas iteraciones de base, una v2.4 de encuadre, escalarla.
+
+La evidencia de la nº 298 habla a esa afirmación **en los dos
+sentidos, y esta adenda lo declara entero**:
+
+- **A favor del gatillo:** la degradación del 40 % es real y su
+  caso extremo es severo — en emdash el freno se comió el plan
+  entero y el revisor no emitió nada. Un revisor general que en
+  2 de cada 5 PRs no puede ejecutar su propio plan bajo su freno
+  no tiene, con estos precios y este freno, una economía que
+  «cierre» como línea: cada mejora de cobertura pediría más
+  pasadas contra el mismo tope. La afirmación del falsador, sobre
+  la continuación de la línea, queda **firme**.
+- **En contra de extender el gatillo a todo lo demás:** la
+  corrida **completó** 25/25 y su costo real, **US$20,41**, cayó
+  **dentro de la banda pre-registrada de la etapa** (US$15–25,
+  Adenda 2 §5), con el tope de etapa y el freno por PR intactos —
+  la economía de *esta medición* cerró. La degradación no fue una
+  falla de operación ni un silencio: es **el mecanismo de
+  declaración del propio diseño** (§3(c)) — la 5ª pasada se
+  declara caída en el ledger, jamás se esconde — y aun operando
+  en el 40 % del set, la corrida produjo **la medición más fuerte
+  de la línea** (R 18,75 % contra una predicción de 1–3 %). La
+  degradación mide el precio de la cobertura bajo el freno; no
+  midió que la corrida no pudiera hacerse ni pagarse.
+
+**FALLO de la lectura:** el falsador de economía del §8 queda
+**firme contra la continuación de la línea del revisor**: la base
+v2.3.1 queda **CONGELADA como medida** — sin v2.4, sin nuevas
+iteraciones de base, sin re-corridas de base bajo este papel — y
+**no prohíbe la medición del brazo ALMA**, porque esa medición
+responde a **otra pregunta pre-registrada y distinta**: el efecto
+de la puerta (la variante (ii) de la §4, la puerta 1.4.1 de la
+Adenda 1, la regla de avance de la §6), cuya cadena de
+habilitación — Adenda 1 §5 y Adenda 2 §6, paso 8 — estaba
+condicionada a una sola cosa: **que la linterna pasara. Pasó.**
+La corrida ALMA no continúa la línea del revisor: la usa, una
+última vez y tal como está congelada, como instrumento de la
+comparación para la que todo este papel existe («cuatro prácticas
+sin un solo puntaje válido del brazo ALMA: la comparación que el
+sistema existe para medir nunca se midió en el examen real», §1).
+
+**Límite de esta lectura, declarado:** si alguien la leyera como
+«el §8 no importa» o «los falsadores se negocian cuando el
+resultado gusta», sería **falsa**. El §8 importa exactamente acá:
+es el §8 el que cierra la línea del revisor con esta misma
+corrida como su último acto de base (§5 de esta adenda), y es el
+§8 el que deja asentado, sin rebaja, que su economía no cerró.
+Lo que esta lectura niega es solo la extensión del falsador a
+una pregunta que su texto no nombra.
+
+### 3. La corrida ALMA que queda habilitada (declaración previa a cualquier lanzamiento)
+
+- **Imagen:** la v2.3.1 ya publicada y verificada —
+  `ghcr.io/almaoficial/alma-reviewbench@sha256:144756cea49ee33e8b16ddb0204556adb0f1c2430ea885ec6a206bbaa6964544`
+  — la misma de la base nº 298. La imagen ya contiene el revisor
+  2.3.1, la puerta 1.4.1 y el selector `gate=v141` (Adenda 1):
+  no hay publicación nueva.
+- **Config ALMA del portal:** cambian **solo** el campo de
+  imagen (a la de arriba) y las etiquetas **`reviewer=v23`** y
+  **`gate=v141`**. El resto de la fila queda como ya está —
+  `backend=llm · governance=alma · model=gpt-5.6-sol ·
+  effort=medium` — y se **verifica campo por campo al editar**
+  (guardar y releer, como siempre). **`RB_MAX_SPEND_USD` jamás
+  se abre ni se toca**, en esta corrida como en todas.
+- **Compuerta de saldo (vinculante, heredada de la Adenda 2
+  §5):** saldo verificado en el portal **≥ US$25** antes de
+  lanzar. El saldo actual es **US$7,58** (tras la nº 298):
+  la corrida **no corre** hasta la carga de Alejandro y su
+  verificación en el acto.
+- **Economía heredada, declarada de antemano:** costo esperado
+  **US$15–25** (la banda de la Adenda 2 §5 para el brazo ALMA) y
+  **degradación esperada ≈ 40 %**, asentada aquí como **hecho
+  conocido y aceptado antes de correr**, no como sorpresa: el
+  brazo ALMA corre el mismo revisor bajo el mismo freno, y su
+  degradación esperada es la de la base. Si la corrida ALMA
+  excede su banda de costo o muere por causa propia, **se
+  registra igual**, con la misma disciplina de cierre que la
+  nº 298 — ningún resultado de esta corrida se esconde ni se
+  re-corre «hasta que salga».
+- **Un solo lanzamiento:** la primera corrida ALMA que complete
+  es la válida (§6 del papel). Nada de «Submit» (la final) desde
+  esta adenda.
+
+### 4. Cómo se mide el efecto de la puerta (declarado ahora)
+
+El cuerpo de este papel (§6) re-derivó la regla de avance sobre
+«métricas del portal, grounded». La nº 298 demostró, con recibos,
+que **ese grounded del portal no es acreditable**: el titular de
+lista va sin etiqueta Grounded/Augmented, el desglose no aparece
+en ninguna vista accesible, y el cotejo aritmético muestra que el
+titular es indescomponible como grounded micro (adenda al
+resultado de la nº 298, §2–§3). La vara grounded exacta de la base
+— la que la regla compara — salió de la **adjudicación local
+completa** contra el gold público, no del portal. Para que la
+comparación de brazos sea homogénea, esta adenda declara **antes
+de correr** el instrumento de medición del brazo ALMA:
+
+1. **La corrida de práctica del portal se corre y se reporta
+   entera**, incluido su titular de lista — asentado **como
+   augmented**, con la misma salvedad de etiqueta que la nº 298,
+   sin acreditarlo como grounded.
+2. **Adjudicación local completa (US$0)** de las emisiones del
+   brazo ALMA contra el gold público, con **el mismo método** de
+   las adjudicaciones de la 296 (parcial) y la 298 (completa):
+   mismo archivo + mismo defecto/mecanismo, un TP primario por
+   emisión, conteo micro sobre los mismos denominadores (352 TP
+   / 213 FP gold; emisiones = las del zip de outputs).
+3. **La regla de avance de la §6, variante (ii) según la Adenda
+   1, se evalúa sobre los números adjudicados de ambos brazos:**
+   - **Precisión:** P_ALMA ≥ P_base + **0,05**, con P_base
+     grounded adjudicada = **53,6 %** → **vara: P_ALMA ≥ 58,6 %**.
+     (La declaración de techo de la §6 no se dispara: 53,6 % <
+     90 %.)
+   - **Pureza de la retención:** de los hallazgos que la base
+     emitió y ALMA retuvo (`needs_validation`) o rechazó, **a lo
+     sumo 1 de cada 3 era un TP grounded** adjudicado.
+   - **Pérdida inexplicada = 0:** todo TP grounded que la base
+     cubrió y ALMA no, aparece en el ledger de ALMA como retenido
+     o rechazado con su razón; una sola pérdida muda falsifica la
+     compuerta aunque los demás componentes pasen.
+   - **F1 se reporta en ambos brazos; no es compuerta** (la
+     razón aritmética de la §6 sigue vigente).
+4. **Los conteos de la puerta salen de los run-info de la propia
+   corrida ALMA:** aceptados / `needs_validation` / rechazados,
+   **por familia** (general vs especialidad), junto con la
+   degradación declarada de la corrida y su costo real por
+   diferencia de saldo — la contabilidad completa de la retención
+   que la §6, componente 3, exige.
+
+Si la adjudicación del brazo ALMA no pudiera ejecutarse por
+cualquier causa, el efecto de la puerta queda **sin medir** y así
+se asienta: no se sustituye por el titular del portal.
+
+### 5. Cierre de la línea
+
+La corrida ALMA habilitada por esta adenda es **el último acto
+del papel v2.3**. Con su resultado — pase o no pase la regla de
+avance — **la línea de revisores de este papel se cierra**: la
+base v2.3.1 queda como artefacto medido y congelado (P grounded
+53,6 % · R 18,75 % · F1 27,8 % adjudicados), el falsador de
+economía del §8 queda firme sobre su continuación, y la pregunta
+de la puerta queda respondida con el instrumento de la §4 de esta
+adenda o asentada como sin medir. **Cualquier continuación —
+otra base, otra puerta, otro examen — es un papel nuevo**, con su
+pre-registro y su «sí» propios. Nada de este papel se estira por
+inercia más allá de esta corrida.
+
+— Adenda 3, 2026-10-22. Textos que la sostienen: §6 (regla de
+avance y linterna), §8 (falsadores) y §11 (secuencia) del cuerpo;
+Adenda 1 (puerta 1.4.1, variante (ii), secuencia §5); Adenda 2
+(§5 presupuesto y compuerta, §6 secuencia paso 8). Recibos:
+`RESULTADO-PRACTICA-V231-20261022.md`,
+`ADENDA-RESULTADO-PRACTICA-V231-20261022.md`,
+`ADJUDICACION-COMPLETA-298-20261022.md`. Gasto de esta adenda:
+**US$0** — sin código, sin portal, sin corridas, sin publicar.
+
+## ADENDA 4 — Reparación de la admisión de `gate=v141` en el revisor (v2.3.2) y relanzamiento del brazo ALMA
+
+### 1. Hechos: la nº 310 no midió nada
+
+La práctica del brazo ALMA habilitada por la Adenda 3 se lanzó el
+2026-10-22 07:15:27 EDT como corrida nº 310 (config «llm · alma ·
+gpt-5.6-sol · medium · v23 · v141», imagen v2.3.1
+`sha256:144756cea4…`) y cerró **FAILED «at run-agent (4, 4)»**.
+Recibos: **costo real US$0,00** — saldo OpenAI (org Personal)
+US$25,58 antes (07:13 EDT) y US$25,58 después (~07:29–07:33 EDT);
+**cero llamadas al modelo y cero emisiones** (`findings = null` en
+los 4 shards alcanzados, 21 PRs nunca alcanzados; puntajes del
+portal «P — · R —», sin titular).
+
+La causa quedó diagnosticada con recibos en
+`DIAGNOSTICO-PRACTICA-ALMA-310-20261022.md`: la imagen trae **dos
+resolvedores de `RB_CONFIG_GATE` que no se espejan**. El selector
+de `agent/main.py` admite `v141` desde la Adenda 1 y de hecho cargó
+la puerta 1.4.1 (la cabecera de la corrida declara
+`validator=alma-evidence-gate/1.4.1`,
+`policy_sha256=73a403d853fca843f06d289e90b5dd7e93dde8b469ad3da7b06bb8448c64db46`),
+pero el resolvedor interno del revisor —
+`agent/llm_reviewer_v23.py::_resolve_gate_v23` (líneas 235–259) —
+tiene su propia lista de admisión, escrita cuando la puerta más
+nueva era la 1.4.0, que termina en `v14` y rechazó `v141`
+fail-closed antes de cualquier llamada al modelo, con el error
+verbatim: «unknown gate version 'v141'; expected 'v1', 'v11',
+'v12', 'v13' or 'v14'». La base nº 298 pasó con la misma imagen
+porque corrió con `gate=v13`, valor presente en ambos resolvedores;
+la nº 310 es la primera corrida que le presenta `v141` al
+resolvedor del revisor.
+
+**Clasificación: falla de admisión/cableado (infraestructura), NO
+una medición.** En consecuencia: (i) la regla de avance variante
+(ii) de la Adenda 3 §4 quedó **SIN MEDIR, no caída** — no hay
+emisiones que adjudicar y la vara no se evalúa ni se sustituye por
+titular alguno; (ii) la nº 310 **no cuenta como el acto ALMA del
+papel**: el «último acto» de la Adenda 3 §5 sigue pendiente de una
+corrida que efectivamente mida.
+
+### 2. Decisión
+
+Alejandro, 2026-10-22 07:37 EDT, sobre el informe de la falla de
+la nº 310 (costo US$0,00, causa diagnosticada, decisión pedida):
+**«Lo hagamos»**. La decisión autoriza exactamente dos cosas: el
+arreglo mínimo declarado en la §3 de esta adenda y **UN
+relanzamiento** del brazo ALMA con la imagen reparada. No autoriza
+ninguna otra cosa: ni otra base, ni cambios en la puerta, ni un
+tercer intento (ver el falsador de la §4).
+
+### 3. El arreglo, declarado antes de correr
+
+Un solo archivo cambia: **`agent/llm_reviewer_v23.py`**.
+
+1. Importación de la identidad de la puerta 1.4.1 junto a las
+   existentes (líneas ~116–120), siguiendo su patrón exacto:
+   `from .alma_gate_v141 import POLICY_VERSION as GATE_V141_VERSION`.
+2. Rama espejo en `_resolve_gate_v23`, después de la de `v14`:
+   `if gate_version == "v141": return KNOWN_CLAIM_TYPES_V13, _CLASS_GUIDANCE_V13, GATE_V141_VERSION`.
+   Las 19 clases y la guía son las mismas que devuelve `v14`: la
+   1.4.1 hereda el conjunto de clases de la 1.3.0 a través de la
+   1.4.0; su único cambio es el ruteo interno de la puerta.
+3. El mensaje de error de ese resolvedor pasa a listar `'v141'`
+   entre los valores esperados (y su docstring se actualiza en el
+   mismo sentido).
+4. `REVIEWER_VERSION` pasa a `llm-reviewer/2.3.2` (la constante
+   vive en ese mismo archivo).
+5. Un test nuevo fija la resolución: `_resolve_gate_v23` con
+   `v141` devuelve la tupla con `GATE_V141_VERSION`, y `v13`/`v14`
+   siguen resolviendo como antes — la combinación revisor-v2.3 ×
+   gate-v141 que ninguna prueba cubría.
+
+Lo que NO cambia, declarado: **`agent/alma_gate_v141.py` queda
+BYTE-IDÉNTICA** (puerta congelada; su POLICY sigue
+`73a403d8…`) y **`agent/main.py` no se toca** (su selector ya era
+correcto). Mismos prompts, mismas clases, mismo techo de 4.096: es
+completar la tabla de admisión del revisor, no un cambio de
+comportamiento de la puerta ni del revisor.
+
+La reparación implica **imagen nueva (digest nuevo)**: el revisor
+viaja dentro de la imagen, y del lado del portal no hay nada que
+arreglar (inyectó la config pedida y relayó el error fielmente).
+En el portal se actualiza **SOLO el campo de imagen** de la config
+ALMA; las etiquetas `reviewer=v23` y `gate=v141` ya son las
+correctas y no se tocan, y `RB_MAX_SPEND_USD` jamás se toca.
+
+### 4. Compuerta y falsador de la reparación
+
+**Compuerta vinculante:** ningún relanzamiento sin saldo OpenAI
+verificado **≥ US$25** en el acto (saldo al 2026-10-22 07:33 EDT:
+US$25,58 — la nº 310 no gastó nada).
+
+**FALSADOR de la reparación:** si la corrida relanzada muere con
+la misma firma de admisión («unknown gate version 'v141'»), la
+reparación queda **refutada** y la línea se detiene **sin tercer
+intento**: el efecto de la puerta se asienta como sin medir por
+falla de integración y el papel v2.3 se cierra con ese resultado.
+
+### 5. Medición de la relanzada: rige la Adenda 3 §4, entera
+
+Todo lo demás de la Adenda 3 §4 sigue vigente para la relanzada,
+sin mover una coma: vara variante (ii) — **P_ALMA grounded ≥
+58,6 %**, pureza de retención **≤ 1 de cada 3** retenidos/rechazados
+era TP grounded, **pérdida inexplicada = 0** — evaluada sobre
+**adjudicación local completa (US$0)** contra el gold con el
+método de las adjudicaciones 296/298; el titular del portal se
+reporta como **augmented** con su salvedad; conteos de la puerta
+(aceptados / `needs_validation` / rechazados, por familia) desde
+los run-info; economía heredada declarada (costo esperado
+US$15–25, degradación esperada ≈ 40 % como hecho conocido). Y
+rige también la §5 de la Adenda 3: **la corrida relanzada ES el
+último acto del papel v2.3** — pase o no pase la regla de avance,
+la línea se cierra con su resultado y cualquier continuación es
+un papel nuevo.
+
+— Adenda 4, 2026-10-22. Textos que la sostienen: Adenda 1 (puerta
+1.4.1 y selector `v141`), Adenda 3 (§4 medición y vara, §5 cierre
+de la línea) de este papel. Recibos:
+`RESULTADO-PRACTICA-ALMA-V231-20261022.md` (la nº 310),
+`DIAGNOSTICO-PRACTICA-ALMA-310-20261022.md` (la causa).
+Decisión: Alejandro, 2026-10-22 07:37 EDT («Lo hagamos»). Gasto de
+esta adenda: **US$0** — sin corridas; el arreglo en seco y la
+publicación se asientan en `RESULTADO-ARREGLO-V232-20261022.md` y
+en el REGISTRO.

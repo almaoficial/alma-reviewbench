@@ -87,6 +87,22 @@ platform's preflight rule.  Two changes, nothing else:
   failed.  The fail-closed rule itself does not move: an
   unparseable response still emits nothing.
 
+Fix v2.3.2 (2026-10-22, diagnosis of ALMA practice run #310 —
+DIAGNOSTICO-PRACTICA-ALMA-310-20261022.md; paper Adenda 4): this
+module resolves RB_CONFIG_GATE twice over with agent/main.py, and
+the two resolvers drifted apart — main.py learned "v141" when the
+1.4.1 gate landed (paper Adenda 1) and selected it, but
+``_resolve_gate_v23`` below kept its own admission list ending at
+"v14" and refused "v141" fail-closed before any model call, so the
+ALMA arm died at admission with the gate loaded but never run.
+One change, nothing else: the mirror branch — gate=v141 resolves
+to the 1.3.0's 19 classes and guidance with the 1.4.1's policy
+version, exactly what gate=v14 already resolved plus the 1.4.1's
+identity (the 1.4.1 inherits the class set through the 1.4.0; its
+only change is routing inside the gate, in agent/alma_gate_v141.py,
+which stays byte-identical, as does agent/main.py).  The refusal
+message now lists 'v141' among the expected values.
+
 Selection: run configuration ``RB_CONFIG_REVIEWER=v23`` (default stays
 ``v1``); see ``agent/main.py``.  Arms (paper §3d): base gate=v13,
 ALMA gate=v14 — the first gate divergence between arm configs,
@@ -119,6 +135,7 @@ from .alma_gate_v14 import (
     GENERAL_CATEGORIES_V14,
     POLICY_VERSION as GATE_V14_VERSION,
 )
+from .alma_gate_v141 import POLICY_VERSION as GATE_V141_VERSION
 from .base_reviewer import Candidate
 from .diff_parser import DiffIndex
 from .llm_reviewer import (
@@ -141,7 +158,7 @@ from .llm_reviewer_v2 import (
 )
 
 
-REVIEWER_VERSION = "llm-reviewer/2.3.1"
+REVIEWER_VERSION = "llm-reviewer/2.3.2"
 SELECTION_PASS = "selection"
 FALLBACK_PASS = "fallback_single"
 MAX_DEEP_PASSES = 5
@@ -237,8 +254,10 @@ def _resolve_gate_v23(
     """Resolve the active gate's (claim types, guidance, version) from
     RB_CONFIG_GATE — the same key agent/main.py selects the gate with.
     The specialty family of the selection is the active gate's class
-    set; gate=v14 carries the 1.3.0's 19 classes (the 1.4.0 inherits
-    them by delegation).  Default "v1"."""
+    set; gate=v14 and gate=v141 carry the 1.3.0's 19 classes (the
+    1.4.0 inherits them by delegation, and the 1.4.1 inherits them
+    through the 1.4.0 — its only change is routing inside the
+    gate).  Default "v1"."""
 
     gate_version = (config.get("gate") or "v1").strip().lower()
     if gate_version == "v1":
@@ -251,10 +270,12 @@ def _resolve_gate_v23(
         return KNOWN_CLAIM_TYPES_V13, _CLASS_GUIDANCE_V13, GATE_V13_VERSION
     if gate_version == "v14":
         return KNOWN_CLAIM_TYPES_V13, _CLASS_GUIDANCE_V13, GATE_V14_VERSION
+    if gate_version == "v141":
+        return KNOWN_CLAIM_TYPES_V13, _CLASS_GUIDANCE_V13, GATE_V141_VERSION
     raise RealLLMRefused(
         f"backend=llm v2.3 refused: unknown gate version {gate_version!r}; "
-        "expected 'v1', 'v11', 'v12', 'v13' or 'v14' (RB_CONFIG_GATE); "
-        "no model call was made"
+        "expected 'v1', 'v11', 'v12', 'v13', 'v14' or 'v141' "
+        "(RB_CONFIG_GATE); no model call was made"
     )
 
 

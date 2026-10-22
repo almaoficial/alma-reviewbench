@@ -243,7 +243,7 @@ class ParseFailureObservabilityTests(unittest.TestCase):
             settled = reviewer.last_run_info.to_dict()
             self.assertEqual(settled["triage_max_output_tokens"], 4096)
             self.assertEqual(settled["parse_failures"], [])
-            self.assertEqual(settled["reviewer_version"], "llm-reviewer/2.3.1")
+            self.assertEqual(settled["reviewer_version"], "llm-reviewer/2.3.2")
 
 
 if __name__ == "__main__":

@@ -135,7 +135,7 @@ class SelectionTests(unittest.TestCase):
             directory, diff_text, pr, CONFIG_ALMA_V14, armed_env(), transport
         )
         info = result.llm_run_info
-        self.assertEqual(info["reviewer_version"], "llm-reviewer/2.3.1")
+        self.assertEqual(info["reviewer_version"], "llm-reviewer/2.3.2")
         self.assertEqual(info["gate_version"], "alma-evidence-gate/1.4.0")
         self.assertEqual(
             info["selection_candidates"],
@@ -671,7 +671,7 @@ class BatteryDryRunTests(unittest.TestCase):
                         mode=mode,
                     )
                     info = result.llm_run_info
-                    self.assertEqual(info["reviewer_version"], "llm-reviewer/2.3.1")
+                    self.assertEqual(info["reviewer_version"], "llm-reviewer/2.3.2")
                     self.assertEqual(info["calls"], 2)
                     self.assertEqual(
                         info["selection_specialty"], [truth["planted_class"]]
