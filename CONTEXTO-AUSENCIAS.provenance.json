@@ -1,0 +1,156 @@
+{
+ "artifact": "alma-absence-context/1.0",
+ "compiler": "alma-absence-compiler/1.0",
+ "corpus": {
+  "run": 298,
+  "gold_tp": 352,
+  "touched": 66,
+  "absent": 286,
+  "decisions_sha256": "feebdc6e0aecf073dd81b7e1dabde670449932fbdef2d9e073a15174ea74651c",
+  "grey_refs_total": 17,
+  "grey_refs_parsed": 16
+ },
+ "families": {
+  "A2_archivo_visitado_no_reclamado": 182,
+  "A1_archivo_nunca_visitado": 104
+ },
+ "a2_with_overlap": 54,
+ "grey_grazed_absent": 11,
+ "by_category": {
+  "accessibility": {
+   "gold_tp": 10,
+   "absent": 7
+  },
+  "api-architecture": {
+   "gold_tp": 12,
+   "absent": 12
+  },
+  "correctness": {
+   "gold_tp": 133,
+   "absent": 100
+  },
+  "documentation": {
+   "gold_tp": 21,
+   "absent": 18
+  },
+  "maintainability": {
+   "gold_tp": 44,
+   "absent": 44
+  },
+  "performance": {
+   "gold_tp": 12,
+   "absent": 7
+  },
+  "reliability": {
+   "gold_tp": 58,
+   "absent": 49
+  },
+  "security": {
+   "gold_tp": 27,
+   "absent": 23
+  },
+  "testing": {
+   "gold_tp": 35,
+   "absent": 26
+  }
+ },
+ "by_context_required": {
+  "broader-project-context": {
+   "gold_tp": 17,
+   "absent": 14
+  },
+  "diff-only": {
+   "gold_tp": 115,
+   "absent": 94
+  },
+  "diff-plus-related-files": {
+   "gold_tp": 220,
+   "absent": 178
+  }
+ },
+ "by_scope": {
+  "exacerbated-by-pr": {
+   "gold_tp": 14,
+   "absent": 12
+  },
+  "introduced-by-pr": {
+   "gold_tp": 315,
+   "absent": 251
+  },
+  "pre-existing": {
+   "gold_tp": 23,
+   "absent": 23
+  }
+ },
+ "by_severity": {
+  "high": {
+   "gold_tp": 36,
+   "absent": 28
+  },
+  "low": {
+   "gold_tp": 182,
+   "absent": 165
+  },
+  "medium": {
+   "gold_tp": 134,
+   "absent": 93
+  }
+ },
+ "by_difficulty": {
+  "easy": {
+   "gold_tp": 174,
+   "absent": 148
+  },
+  "hard": {
+   "gold_tp": 19,
+   "absent": 13
+  },
+  "medium": {
+   "gold_tp": 159,
+   "absent": 125
+  }
+ },
+ "block_chars": 8427,
+ "examples": [
+  {
+   "tag": "A1-1",
+   "pr": "AY2526S2-CS2103T-W14-3_tp_152-e0a9ce03",
+   "gold_idx": 0,
+   "family": "A1_archivo_nunca_visitado",
+   "file": "src/main/java/seedu/address/logic/commands/DeleteNoteCommand.java",
+   "message_sha256": "c768d673df9aeccd103231e814dea38eb154d37dd0ca5be7d67d139855b56c8e",
+   "quoted_emission": null,
+   "quoted_emission_sha256": null
+  },
+  {
+   "tag": "A1-2",
+   "pr": "AY2526S2-CS2103T-W14-3_tp_152-e0a9ce03",
+   "gold_idx": 4,
+   "family": "A1_archivo_nunca_visitado",
+   "file": "src/test/java/seedu/address/logic/commands/DeleteNoteCommandTest.java",
+   "message_sha256": "07f54e0624b5662031fa8f67d8d5615071611f2fd5c31d86ffe7c89a41085bbd",
+   "quoted_emission": null,
+   "quoted_emission_sha256": null
+  },
+  {
+   "tag": "A2-1",
+   "pr": "AA-Factory_aafactory-prototype_17-a1978cb7",
+   "gold_idx": 3,
+   "family": "A2_archivo_visitado_no_reclamado",
+   "file": "aafactory/src/tests/test_chat/test_mock_chat.py",
+   "message_sha256": "ca27201c119808552dde58332eb44d2cf4fd79e3cec9ea645c734d7729a9f9c8",
+   "quoted_emission": 0,
+   "quoted_emission_sha256": "67f128b38b3ec92fea9c0ce7c67470b0bda6820897716ebf95d40f8be5ba20ce"
+  },
+  {
+   "tag": "A2-2",
+   "pr": "AA-Factory_aafactory-prototype_17-a1978cb7",
+   "gold_idx": 4,
+   "family": "A2_archivo_visitado_no_reclamado",
+   "file": "aafactory/src/tests/test_chat/test_mock_chat.py",
+   "message_sha256": "d00a2036d155b717f940985b74080cd4842b53abacd403faf001dd6936a04c8b",
+   "quoted_emission": 0,
+   "quoted_emission_sha256": "67f128b38b3ec92fea9c0ce7c67470b0bda6820897716ebf95d40f8be5ba20ce"
+  }
+ ]
+}

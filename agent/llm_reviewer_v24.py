@@ -99,8 +99,10 @@ from pathlib import Path
 from typing import Mapping
 
 from .alma_gate import KNOWN_CLAIM_TYPES, POLICY_VERSION as GATE_V1_VERSION
+from .alma_gate_v13 import KNOWN_CLAIM_TYPES_V13
 from .alma_gate_v150 import (
     CHECK_NO_CONCRETE_PATTERN,
+    POLICY_VERSION as GATE_V150_VERSION,
     _asserted_tokens,
     _is_code_token,
     _normalize_token,
@@ -131,6 +133,7 @@ from .llm_reviewer_v23 import (
     GENERAL_CATEGORIES,
     MAX_DEEP_PASSES,
     SELECTION_PASS,
+    _CLASS_GUIDANCE_V13,
     _build_selection_system_prompt,
     _extract_selection,
     _refuse_parse_failure,
@@ -372,6 +375,31 @@ class LLMRunInfoV24:
         }
 
 
+def _resolve_gate_v24(
+    config: Mapping[str, str],
+) -> tuple[tuple[str, ...], dict[str, str], str]:
+    """Resolve the active gate's (claim types, guidance, version)
+    for the v2.4-family reviewers (v2.4, and v2.5/v2.6 by
+    inheritance — neither defines its own ``from_env``).
+
+    Mounting declared in PREREGISTRO-VALIDACION-20261024.md §3,
+    written before this code: the parked design's arms are
+    "v2.4 con puerta 1.5.0" (and its heirs), but the admission
+    list of ``_resolve_gate_v23`` ends at "v141" — the same
+    drift the Adenda 4 repaired for "v141", one gate later.
+    This wrapper adds ONLY the "v150" branch — the 1.5.0's
+    specialty family is the 1.3.0's 19 classes (its class
+    behaviour is the 1.4.1's by delegation; verified by
+    program: ``KNOWN_CLAIM_TYPES_V150`` equals the v13 set) —
+    and delegates every other value to ``_resolve_gate_v23``,
+    which stays byte-identical."""
+
+    gate_version = (config.get("gate") or "v1").strip().lower()
+    if gate_version == "v150":
+        return KNOWN_CLAIM_TYPES_V13, _CLASS_GUIDANCE_V13, GATE_V150_VERSION
+    return _resolve_gate_v23(config)
+
+
 class LLMReviewerV24:
     """Generalized selection + deep passes, with evidence-discipline
     production (paper: PREREGISTRO-PRODUCTOR-EVIDENCIA.md)."""
@@ -414,7 +442,7 @@ class LLMReviewerV24:
         config: Mapping[str, str],
         transport: Transport | None = None,
     ) -> "LLMReviewerV24":
-        claim_types, class_guidance, gate_version = _resolve_gate_v23(config)
+        claim_types, class_guidance, gate_version = _resolve_gate_v24(config)
         return cls(
             LLMSettings.from_env(env, config),
             context_token_budget=_resolve_context_budget(env, config),

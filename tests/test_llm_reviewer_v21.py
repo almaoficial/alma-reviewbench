@@ -407,7 +407,7 @@ class SafetyAndSelectionTests(unittest.TestCase):
             ),
             None,
         )
-        config = dict(CONFIG_ALMA_V13, reviewer="v22")
+        config = dict(CONFIG_ALMA_V13, reviewer="v99")
         with self.assertRaises(ValueError) as caught:
             run_agent(
                 diff_text=diff_text,
@@ -419,7 +419,7 @@ class SafetyAndSelectionTests(unittest.TestCase):
                 env=armed_env(),
                 llm_transport=SingleTransport([]),
             )
-        self.assertIn("'v21'", str(caught.exception))
+        self.assertIn("'v22'", str(caught.exception))
 
     def test_diff_index_type_is_used(self):
         # Guard against signature drift with agent/main.py: review()

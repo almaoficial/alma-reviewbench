@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import sys
 from typing import Mapping
+import uuid
 
 from .alma_gate import POLICY_SHA256, POLICY_VERSION, AlmaGate, candidate_to_finding
 from .alma_gate_v11 import (
@@ -34,13 +35,31 @@ from .alma_gate_v141 import (
     POLICY_VERSION as POLICY_VERSION_V141,
     AlmaGateV141,
 )
+from .alma_gate_v150 import (
+    POLICY_SHA256 as POLICY_SHA256_V150,
+    POLICY_VERSION as POLICY_VERSION_V150,
+    AlmaGateV150,
+)
 from .base_reviewer import BaseReviewer, Candidate
 from .diff_parser import parse_unified_diff
 from .llm_reviewer import LLMReviewer, RealLLMRefused
+from .run_ledger import (
+    RunLedger,
+    RunLedgerError,
+    record_candidates,
+    record_gate_decisions,
+    record_session_close,
+    record_session_error,
+    record_session_open,
+    record_spend,
+)
 from .llm_reviewer_v2 import LLMReviewerV2
 from .llm_reviewer_v21 import LLMReviewerV21
 from .llm_reviewer_v22 import LLMReviewerV22
 from .llm_reviewer_v23 import LLMReviewerV23
+from .llm_reviewer_v24 import LLMReviewerV24
+from .llm_reviewer_v25 import LLMReviewerV25
+from .llm_reviewer_v26 import LLMReviewerV26
 
 
 # Backwards-compatible name: the mock-first package raised this when
@@ -83,8 +102,13 @@ def _select_gate(config: Mapping[str, str]):
     alma-evidence-gate/1.4.1 (PREREGISTRO-PUERTA-141.md: the 1.4.0
     with the single routing change of its §2 — check (f), no cited
     line added by this change, is a firm rejection at the frontier
-    again, never a needs_validation blocker).  The gate exists only
-    in the ALMA arm; the base arm bypasses any gate."""
+    again, never a needs_validation blocker); "v150" is
+    alma-evidence-gate/1.5.0 (PREREGISTRO-PUERTA-150.md: the
+    1.4.1 by delegation for the 19 classes, plus the grounding
+    rule for the general categories — admitted here by the
+    mounting declared in PREREGISTRO-VALIDACION-20261024.md §3).
+    The gate exists only in the ALMA arm; the base arm bypasses
+    any gate."""
 
     gate_version = (config.get("gate") or "v1").strip().lower()
     if gate_version == "v1":
@@ -99,9 +123,12 @@ def _select_gate(config: Mapping[str, str]):
         return AlmaGateV14()
     if gate_version == "v141":
         return AlmaGateV141()
+    if gate_version == "v150":
+        return AlmaGateV150()
     raise ValueError(
         f"unknown gate version {gate_version!r}; "
-        "expected 'v1', 'v11', 'v12', 'v13', 'v14' or 'v141' (RB_CONFIG_GATE)"
+        "expected 'v1', 'v11', 'v12', 'v13', 'v14', 'v141' or 'v150' "
+        "(RB_CONFIG_GATE)"
     )
 
 
@@ -177,6 +204,7 @@ def run_agent(
     config: Mapping[str, str] | None = None,
     env: Mapping[str, str] | None = None,
     llm_transport=None,
+    run_ledger: RunLedger | None = None,
 ) -> RunResult:
     config = dict(config or {})
     if mode not in {"alma", "base"}:
@@ -209,6 +237,16 @@ def run_agent(
         # the benchmark's nine public general categories alongside
         # the 19 specialty classes, under the same shared cap of 5
         # deep passes and the same degradation rule).
+        # "v24" is the evidence-discipline producer of
+        # PREREGISTRO-PRODUCTOR-EVIDENCIA.md (the v2.3 selection
+        # unchanged; deep findings are born citable or settle in
+        # the production ledger, with the birth shaper as the
+        # last production stage); "v25" is the v2.4 plus the
+        # lessons context read in production
+        # (PREREGISTRO-MEMORIA-LECCIONES.md); "v26" is the v2.5
+        # plus the absence context (ADENDA-V26.md).  The three
+        # were admitted here by the mounting declared in
+        # PREREGISTRO-VALIDACION-20261024.md §3.
         # All of them feed the identical gate.
         effective_env = dict(os.environ) if env is None else env
         reviewer_version = (config.get("reviewer") or "v1").strip().lower()
@@ -289,15 +327,94 @@ def run_agent(
                     or "/work/repo"
                 ),
             )
+        elif reviewer_version == "v24":
+            reviewer = LLMReviewerV24.from_env(
+                effective_env,
+                config,
+                transport=llm_transport,
+            )
+            candidates = reviewer.review(
+                diff_text=diff_text,
+                diff=diff,
+                config=config,
+                mode=mode,
+                repo_root=(
+                    config.get("repo_root")
+                    or effective_env.get("RB_REPO_ROOT")
+                    or "/work/repo"
+                ),
+            )
+        elif reviewer_version == "v25":
+            reviewer = LLMReviewerV25.from_env(
+                effective_env,
+                config,
+                transport=llm_transport,
+            )
+            candidates = reviewer.review(
+                diff_text=diff_text,
+                diff=diff,
+                config=config,
+                mode=mode,
+                repo_root=(
+                    config.get("repo_root")
+                    or effective_env.get("RB_REPO_ROOT")
+                    or "/work/repo"
+                ),
+            )
+        elif reviewer_version == "v26":
+            reviewer = LLMReviewerV26.from_env(
+                effective_env,
+                config,
+                transport=llm_transport,
+            )
+            candidates = reviewer.review(
+                diff_text=diff_text,
+                diff=diff,
+                config=config,
+                mode=mode,
+                repo_root=(
+                    config.get("repo_root")
+                    or effective_env.get("RB_REPO_ROOT")
+                    or "/work/repo"
+                ),
+            )
         else:
             raise ValueError(
                 f"unknown reviewer version {reviewer_version!r}; "
-                "expected 'v1', 'v2', 'v21', 'v22' or 'v23' (RB_CONFIG_REVIEWER)"
+                "expected 'v1', 'v2', 'v21', 'v22', 'v23', 'v24', 'v25' "
+                "or 'v26' (RB_CONFIG_REVIEWER)"
             )
         if reviewer.last_run_info is not None:
             llm_run_info = reviewer.last_run_info.to_dict()
     else:
         raise ValueError(f"unknown backend {backend!r}; expected 'mock' or 'llm'")
+
+    # Run session ledger (PREREGISTRO-REGISTRO-SESION.md):
+    # observability only.  With run_ledger=None — every existing
+    # caller — nothing below emits anything and behaviour is
+    # unchanged.  Append failures are announced on stderr and
+    # never break production (fail-soft, declared in the paper).
+    rl_active = run_ledger is not None
+    pr_number = int(pr_metadata["pr_number"])
+
+    def _rl_emit(fn) -> None:
+        nonlocal rl_active
+        if not rl_active:
+            return
+        try:
+            fn()
+        except Exception as exc:  # observability must not break the run
+            print(
+                f"alma-reviewbench run-ledger append failed: {exc}",
+                file=sys.stderr,
+            )
+            rl_active = False
+
+    _rl_emit(
+        lambda: record_candidates(
+            run_ledger, pr_number=pr_number, candidates=candidates
+        )
+    )
 
     gate = _select_gate(config)
     needs_validation: list[dict[str, object]] | None = None
@@ -335,6 +452,32 @@ def run_agent(
             for candidate in candidates
         ]
 
+    _rl_emit(
+        lambda: record_gate_decisions(
+            run_ledger,
+            pr_number=pr_number,
+            ledger_entries=ledger,
+            needs_validation=needs_validation,
+        )
+    )
+    _rl_emit(
+        lambda: record_spend(
+            run_ledger,
+            pr_number=pr_number,
+            estimated_cost_usd=(
+                float(llm_run_info.get("estimated_cost_usd") or 0.0)
+                if llm_run_info is not None
+                else 0.0
+            ),
+            max_spend_usd=(
+                float(llm_run_info["max_spend_usd"])
+                if llm_run_info is not None
+                and llm_run_info.get("max_spend_usd") is not None
+                else None
+            ),
+        )
+    )
+
     output: dict[str, object] = {
         "pr": {
             "repo": _normalize_repo(pr_metadata),
@@ -363,27 +506,51 @@ def _rb_config(env: Mapping[str, str]) -> dict[str, str]:
     return config
 
 
+def _selected_gate_identity(config: Mapping[str, str]) -> tuple[str, str]:
+    """The SELECTED gate's (validator, policy_sha256) labels;
+    run_agent validates the value and fails closed on an unknown
+    one, so an unrecognized value is only labelled here, never
+    silently mapped to a real gate."""
+
+    gate_version = (config.get("gate") or "v1").strip().lower()
+    if gate_version == "v150":
+        return POLICY_VERSION_V150, POLICY_SHA256_V150
+    if gate_version == "v141":
+        return POLICY_VERSION_V141, POLICY_SHA256_V141
+    if gate_version == "v14":
+        return POLICY_VERSION_V14, POLICY_SHA256_V14
+    if gate_version == "v13":
+        return POLICY_VERSION_V13, POLICY_SHA256_V13
+    if gate_version == "v12":
+        return POLICY_VERSION_V12, POLICY_SHA256_V12
+    if gate_version == "v11":
+        return POLICY_VERSION_V11, POLICY_SHA256_V11
+    if gate_version == "v1":
+        return POLICY_VERSION, POLICY_SHA256
+    return f"unknown-gate:{gate_version}", "unknown"
+
+
+def _resolve_run_ledger_path(
+    env: Mapping[str, str], config: Mapping[str, str], out_path: Path
+) -> Path | None:
+    """Run session ledger path (PREREGISTRO-REGISTRO-SESION.md
+    §2.3): ALMA_RUN_LEDGER_PATH, then RB_CONFIG_RUN_LEDGER (the
+    value "off" is the only off switch), then the default —
+    run-ledger.jsonl beside --out, written by the runner itself
+    on every run, not opt-in."""
+
+    raw = env.get("ALMA_RUN_LEDGER_PATH") or config.get("run_ledger")
+    if raw is not None and raw.strip().lower() == "off":
+        return None
+    if raw:
+        return Path(raw)
+    return out_path.with_name("run-ledger.jsonl")
+
+
 def _print_applied_config(config: Mapping[str, str], mode: str, backend: str) -> None:
     requested_model = config.get("model", "mock-deterministic")
     effort = config.get("effort", "local")
-    # Print the SELECTED gate (RB_CONFIG_GATE); run_agent validates the
-    # value and fails closed on an unknown one, so an unrecognized value
-    # is only labelled here, never silently mapped to a real gate.
-    gate_version = (config.get("gate") or "v1").strip().lower()
-    if gate_version == "v141":
-        validator, policy_sha256 = POLICY_VERSION_V141, POLICY_SHA256_V141
-    elif gate_version == "v14":
-        validator, policy_sha256 = POLICY_VERSION_V14, POLICY_SHA256_V14
-    elif gate_version == "v13":
-        validator, policy_sha256 = POLICY_VERSION_V13, POLICY_SHA256_V13
-    elif gate_version == "v12":
-        validator, policy_sha256 = POLICY_VERSION_V12, POLICY_SHA256_V12
-    elif gate_version == "v11":
-        validator, policy_sha256 = POLICY_VERSION_V11, POLICY_SHA256_V11
-    elif gate_version == "v1":
-        validator, policy_sha256 = POLICY_VERSION, POLICY_SHA256
-    else:
-        validator, policy_sha256 = f"unknown-gate:{gate_version}", "unknown"
+    validator, policy_sha256 = _selected_gate_identity(config)
     print(
         "alma-reviewbench "
         f"requested_model={requested_model} effort={effort} "
@@ -419,6 +586,16 @@ def main(argv: list[str] | None = None) -> int:
     agent_name = env.get("RB_AGENT", "alma-reviewer")
     _print_applied_config(config, args.mode, args.backend)
 
+    # Run session ledger: opened once the PR is identified,
+    # closed after the outputs are written.  Fail-soft by
+    # design (PREREGISTRO-REGISTRO-SESION.md §2.4): a ledger
+    # that cannot open or append is announced on stderr and the
+    # run proceeds — its absence is never silent again.
+    run_ledger: RunLedger | None = None
+    rl_segment = uuid.uuid4().hex[:12]
+    rl_pr_number: int | None = None
+    rl_resumed = False
+
     try:
         diff_text = Path(args.diff).read_text(encoding="utf-8")
         pr_metadata = json.loads(Path(args.pr_json).read_text(encoding="utf-8"))
@@ -432,6 +609,59 @@ def main(argv: list[str] | None = None) -> int:
         if expected_pr_number is not None and int(pr_metadata.get("pr_number")) != expected_pr_number:
             raise ValueError("pr.json pr_number does not equal RB_PR_NUMBER")
 
+        rl_pr_number = int(pr_metadata["pr_number"])
+        out_path_hint = Path(args.out)
+        rl_path = _resolve_run_ledger_path(env, config, out_path_hint)
+        if rl_path is not None:
+            run_id = env.get("RB_RUN_ID") or config.get("run_id")
+            try:
+                run_ledger = RunLedger(rl_path, run_id=run_id)
+            except (RunLedgerError, OSError) as exc:
+                print(
+                    f"alma-reviewbench run-ledger disabled: {exc}",
+                    file=sys.stderr,
+                )
+                run_ledger = None
+            if run_ledger is not None:
+                rl_resumed = run_ledger.unclosed_session(rl_pr_number)
+                gate_version_label, gate_policy_sha = (
+                    _selected_gate_identity(config)
+                )
+                raw_cap = (env.get("RB_MAX_SPEND_USD") or "").strip()
+                try:
+                    rl_max_spend = float(raw_cap) if raw_cap else None
+                except ValueError:
+                    rl_max_spend = None
+                try:
+                    record_session_open(
+                        run_ledger,
+                        segment=rl_segment,
+                        agent=agent_name,
+                        mode=args.mode,
+                        backend=args.backend,
+                        config=config,
+                        gate_version=gate_version_label,
+                        policy_sha256=gate_policy_sha,
+                        image_sha256=(
+                            env.get("RB_IMAGE_SHA256")
+                            or config.get("image_sha256")
+                        ),
+                        max_spend_usd=rl_max_spend,
+                        pr={
+                            "repo": _normalize_repo(pr_metadata),
+                            "pr_number": rl_pr_number,
+                            "base": str(pr_metadata.get("base") or ""),
+                            "head": str(pr_metadata.get("head") or ""),
+                        },
+                    )
+                except Exception as exc:  # observability, fail-soft
+                    print(
+                        f"alma-reviewbench run-ledger disabled: {exc}",
+                        file=sys.stderr,
+                    )
+                    run_ledger.close()
+                    run_ledger = None
+
         result = run_agent(
             diff_text=diff_text,
             pr_metadata=pr_metadata,
@@ -440,6 +670,7 @@ def main(argv: list[str] | None = None) -> int:
             backend=args.backend,
             config=config,
             env=env,
+            run_ledger=run_ledger,
         )
         if result.llm_run_info is not None:
             print(
@@ -479,8 +710,66 @@ def main(argv: list[str] | None = None) -> int:
                 json.dumps(ledger_payload, indent=2, ensure_ascii=False) + "\n",
                 encoding="utf-8",
             )
+
+        if run_ledger is not None:
+            try:
+                status_counts = {"accepted": 0, "rejected": 0}
+                for entry in result.ledger:
+                    status = str(entry.get("status"))
+                    if status in status_counts:
+                        status_counts[status] += 1
+                record_session_close(
+                    run_ledger,
+                    pr_number=rl_pr_number,
+                    segment=rl_segment,
+                    counts={
+                        "candidates": len(result.candidates),
+                        "accepted": status_counts["accepted"],
+                        "rejected": status_counts["rejected"],
+                        "needs_validation": len(
+                            result.needs_validation or []
+                        ),
+                    },
+                    findings_emitted=len(result.output["findings"]),
+                    spend_estimated_usd=(
+                        float(
+                            result.llm_run_info.get(
+                                "estimated_cost_usd"
+                            )
+                            or 0.0
+                        )
+                        if result.llm_run_info is not None
+                        else 0.0
+                    ),
+                    resumed=rl_resumed,
+                )
+                # Second channel, declared in the paper: the
+                # portal always captures stdout, so the log
+                # carries how many events and which head hash
+                # must come back even if the file were lost.
+                print(
+                    "alma-reviewbench run_ledger "
+                    f"events={run_ledger.event_count} "
+                    f"head={run_ledger.head_hash}",
+                    flush=True,
+                )
+            except Exception as exc:  # observability, fail-soft
+                print(
+                    f"alma-reviewbench run-ledger close failed: {exc}",
+                    file=sys.stderr,
+                )
+            finally:
+                run_ledger.close()
         return 0
     except Exception as exc:  # The benchmark treats non-zero as a failed PR.
+        if run_ledger is not None:
+            record_session_error(
+                run_ledger,
+                pr_number=rl_pr_number,
+                segment=rl_segment,
+                error=exc,
+            )
+            run_ledger.close()
         print(f"alma-reviewbench error: {exc}", file=sys.stderr)
         return 2
 
