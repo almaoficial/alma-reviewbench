@@ -244,6 +244,10 @@ class LLMReviewerV25(LLMReviewerV24):
             degradation=base.degradation,
             triage_max_output_tokens=base.triage_max_output_tokens,
             parse_failures=base.parse_failures,
+            # The run-344 fix's observability, carried through
+            # (ADENDA-ARREGLO-TOPE-20261024.md §3).
+            deep_max_output_tokens=base.deep_max_output_tokens,
+            length_retries=base.length_retries,
             production_ledger=base.production_ledger,
             shaping=base.shaping,
             lessons_sha256=self.lessons_sha256,

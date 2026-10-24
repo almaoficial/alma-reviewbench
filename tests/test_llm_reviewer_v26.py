@@ -84,9 +84,9 @@ FROZEN_V26 = dict(
     FROZEN_FILE_SHA256,
     **{
         "llm_reviewer_v24.py":
-            "f9d3578eed4fce63b85b37cac44ec86023f7a46e5b7da85e7a9ffb3400640a1d",
+            "3e01b4743bfcdfb6e0dc74e082097eb43cdd8f06e1532ec30d5bc49f8f0240d1",
         "llm_reviewer_v25.py":
-            "7546d7d984679d370fe2aef1242ed96c3828227241ada54d6692cd761d3151df",
+            "75460ac3b877a201a941696590ed49e2024e06844ea3642bb57a3d3bd8e5ab9a",
         "lessons_compiler.py":
             "482fce85f4fba2e4f479fd7e991aaaf1391e9ee38021f3f1b3ed79f9a7e96ce4",
         "absence_compiler.py":

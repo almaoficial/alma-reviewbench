@@ -31,7 +31,16 @@ emission schema's mechanical correctness, verified dry:
 - the frozen semaphore battery, driven directly through
   LLMReviewerV24.review() (the declared equivalent of
   BatteryDryRunTests — main.py mounting is outside the paper):
-  8 cases x 2 gate configs = 16 runs, 16/16.
+  8 cases x 2 gate configs = 16 runs, 16/16;
+- the run-344 fix (ADENDA-ARREGLO-TOPE-20261024.md): the deep
+  budget is this family's own resolved setting (default 16384;
+  config/env override; invalid refuses), the selection budget
+  is untouched, and the length-empty mode reproduces and
+  repairs — empty content with finish_reason 'length' retries
+  ONCE in-agent at double budget and the findings are produced;
+  a second length-empty fails closed exactly as before; a
+  brake without room refuses the retry (no second call) and
+  fails closed as before; no other error retries.
 
 No dry test here measures any EFFECT of the discipline on real
 production rates: that is the paper's §3 caveat, and it is why
@@ -66,6 +75,8 @@ from agent.llm_reviewer_v24 import (  # noqa: E402
     CODE_DECLARED_UNVERIFIABLE,
     CODE_NO_PATTERN,
     CODE_PATTERN_MISMATCH,
+    DEFAULT_DEEP_MAX_OUTPUT_TOKENS,
+    LENGTH_RETRY_MULTIPLIER,
     REVIEWER_VERSION,
     LLMReviewerV24,
 )
@@ -466,6 +477,248 @@ class EmissionSchemaTests(unittest.TestCase):
                 )
         self.assertIn("refused before calling", str(caught.exception))
         self.assertEqual(transport.calls, [])
+
+
+class ScriptedDeepTransport:
+    """Scripted transport for the run-344 fix: the selection
+    pass answers with marks; each deep pass consumes, in order,
+    a script of response specs — {"content": dict|str,
+    "finish_reason": str, "status": int} — so a test can script
+    the exact death of run nº 344 (an empty body closed by
+    'length') and what the in-agent retry then sees."""
+
+    USAGE = {"prompt_tokens": 100, "completion_tokens": 10}
+
+    def __init__(self, marks=(), deep_scripts=None):
+        self.marks = list(marks)
+        self.deep_scripts = {
+            name: list(specs) for name, specs in (deep_scripts or {}).items()
+        }
+        self.calls = []
+
+    def __call__(self, url, headers, payload, timeout):
+        self.calls.append(payload)
+        name = pass_name_of(payload)
+        if name == "selection":
+            content = {
+                "candidates": [
+                    {"mark": mark, "reason": "scripted mark"}
+                    for mark in self.marks
+                ]
+            }
+            body = {
+                "choices": [
+                    {
+                        "message": {"content": json.dumps(content)},
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": self.USAGE,
+            }
+            return 200, json.dumps(body).encode("utf-8")
+        script = self.deep_scripts.get(name) or []
+        spec = script.pop(0) if script else {"content": {"findings": []}}
+        status = spec.get("status", 200)
+        if status != 200:
+            return status, b"scripted endpoint error"
+        content = spec.get("content", {"findings": []})
+        if not isinstance(content, str):
+            content = json.dumps(content)
+        body = {
+            "choices": [
+                {
+                    "message": {"content": content},
+                    "finish_reason": spec.get("finish_reason", "stop"),
+                }
+            ],
+            "usage": self.USAGE,
+        }
+        return 200, json.dumps(body).encode("utf-8")
+
+    def deep_calls(self, name="correctness"):
+        return [p for p in self.calls if pass_name_of(p) == name]
+
+
+def _run_review_env(lines, transport, env, config=CONFIG_V14, path=PATH):
+    """_run_review with an explicit env, returning the reviewer
+    itself so a refusal's settled run info stays inspectable."""
+
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        target = repo / path
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        diff_text = make_diff(path, lines)
+        reviewer = LLMReviewerV24.from_env(env, config, transport=transport)
+        try:
+            emitted = reviewer.review(
+                diff_text=diff_text,
+                diff=parse_unified_diff(diff_text),
+                config=config,
+                repo_root=repo,
+            )
+            return emitted, reviewer, None
+        except RealLLMRefused as exc:
+            return None, reviewer, exc
+
+
+class DeepBudgetTests(unittest.TestCase):
+    def test_default_deep_budget_and_selection_untouched(self):
+        reviewer = LLMReviewerV24.from_env(
+            armed_env(), CONFIG_V14, transport=EmissionTransport()
+        )
+        self.assertEqual(DEFAULT_DEEP_MAX_OUTPUT_TOKENS, 16384)
+        self.assertEqual(reviewer.deep_max_output_tokens, 16384)
+        self.assertEqual(
+            reviewer.length_retry_max_output_tokens,
+            16384 * LENGTH_RETRY_MULTIPLIER,
+        )
+        deep = reviewer.build_deep_payload("correctness", "D", "C")
+        self.assertEqual(deep["max_completion_tokens"], 16384)
+        fallback = reviewer.build_fallback_payload(
+            [("category", "correctness")], "D"
+        )
+        self.assertEqual(fallback["max_completion_tokens"], 16384)
+        # The selection keeps its own triage line (fix v2.3.1's).
+        selection = reviewer.build_selection_payload("D")
+        self.assertEqual(selection["max_completion_tokens"], 4096)
+
+    def test_deep_budget_resolution_config_env_invalid(self):
+        config = dict(CONFIG_V14, deep_max_output_tokens="8192")
+        reviewer = LLMReviewerV24.from_env(
+            armed_env(), config, transport=EmissionTransport()
+        )
+        self.assertEqual(reviewer.deep_max_output_tokens, 8192)
+        self.assertEqual(reviewer.length_retry_max_output_tokens, 16384)
+
+        env = armed_env(RB_LLM_V24_DEEP_MAX_OUTPUT_TOKENS="2048")
+        reviewer = LLMReviewerV24.from_env(
+            env, CONFIG_V14, transport=EmissionTransport()
+        )
+        self.assertEqual(reviewer.deep_max_output_tokens, 2048)
+
+        for bad in ("abc", "0", "-5"):
+            with self.subTest(bad=bad):
+                env = armed_env(RB_LLM_V24_DEEP_MAX_OUTPUT_TOKENS=bad)
+                with self.assertRaises(RealLLMRefused):
+                    LLMReviewerV24.from_env(
+                        env, CONFIG_V14, transport=EmissionTransport()
+                    )
+
+
+class LengthRetryTests(unittest.TestCase):
+    def test_length_empty_retries_at_double_budget_and_recovers(self):
+        transport = ScriptedDeepTransport(
+            marks=["correctness"],
+            deep_scripts={
+                "correctness": [
+                    {"content": "", "finish_reason": "length"},
+                    {"content": {"findings": [_finding()]}},
+                ]
+            },
+        )
+        emitted, info, _ = _run_review(LINES, transport)
+
+        self.assertEqual(len(emitted), 1)
+        self.assertEqual(info["calls"], 3)
+        self.assertEqual(info["passes"], ["selection", "correctness"])
+        self.assertEqual(info["deep_max_output_tokens"], 16384)
+        self.assertEqual(info["parse_failures"], [])
+        self.assertEqual(
+            info["length_retries"],
+            [
+                {
+                    "pass": "correctness",
+                    "first_max_output_tokens": 16384,
+                    "retry_max_output_tokens": 32768,
+                    "outcome": "recovered",
+                }
+            ],
+        )
+        deep_payloads = transport.deep_calls()
+        self.assertEqual(len(deep_payloads), 2)
+        self.assertEqual(deep_payloads[0]["max_completion_tokens"], 16384)
+        self.assertEqual(deep_payloads[1]["max_completion_tokens"], 32768)
+
+    def test_length_empty_twice_fails_closed_as_before(self):
+        transport = ScriptedDeepTransport(
+            marks=["correctness"],
+            deep_scripts={
+                "correctness": [
+                    {"content": "", "finish_reason": "length"},
+                    {"content": "", "finish_reason": "length"},
+                ]
+            },
+        )
+        emitted, reviewer, exc = _run_review_env(LINES, transport, armed_env())
+
+        self.assertIsNone(emitted)
+        self.assertIsNotNone(exc)
+        self.assertIn("parse failure settled", str(exc))
+        self.assertIn("finish_reason='length'", str(exc))
+        self.assertIn("content_length=0", str(exc))
+        self.assertEqual(len(transport.deep_calls()), 2)
+        info = reviewer.last_run_info.to_dict()
+        self.assertEqual(info["length_retries"][0]["outcome"], "still_empty")
+        self.assertEqual(len(info["parse_failures"]), 1)
+        self.assertEqual(info["parse_failures"][0]["finish_reason"], "length")
+        self.assertEqual(info["parse_failures"][0]["content_length"], 0)
+
+    def test_length_retry_refused_when_brake_has_no_room(self):
+        # Cap US$2.00: the deep pass is admitted (its worst case
+        # at 16384 fits), but the retry's worst case at 32768
+        # does not — so no second call exists and the original
+        # empty response fails closed exactly as before the fix.
+        transport = ScriptedDeepTransport(
+            marks=["correctness"],
+            deep_scripts={
+                "correctness": [
+                    {"content": "", "finish_reason": "length"},
+                    {"content": {"findings": [_finding()]}},
+                ]
+            },
+        )
+        env = armed_env(RB_MAX_SPEND_USD="2.00")
+        emitted, reviewer, exc = _run_review_env(LINES, transport, env)
+
+        self.assertIsNone(emitted)
+        self.assertIsNotNone(exc)
+        self.assertIn("parse failure settled", str(exc))
+        self.assertEqual(len(transport.calls), 2)
+        self.assertEqual(len(transport.deep_calls()), 1)
+        info = reviewer.last_run_info.to_dict()
+        self.assertEqual(
+            info["length_retries"][0]["outcome"], "refused_spend_cap"
+        )
+
+    def test_other_errors_do_not_retry(self):
+        # HTTP error on the deep pass: one call, refusal, no retry.
+        transport = ScriptedDeepTransport(
+            marks=["correctness"],
+            deep_scripts={"correctness": [{"status": 500}]},
+        )
+        emitted, reviewer, exc = _run_review_env(LINES, transport, armed_env())
+        self.assertIsNone(emitted)
+        self.assertIn("HTTP 500", str(exc))
+        self.assertEqual(len(transport.deep_calls()), 1)
+        self.assertEqual(reviewer.last_run_info.to_dict()["length_retries"], [])
+
+        # Non-empty unparseable content closed by 'length': the
+        # mode is the EMPTY response, not the finish reason
+        # alone — no retry, the parse failure settles as before.
+        transport = ScriptedDeepTransport(
+            marks=["correctness"],
+            deep_scripts={
+                "correctness": [
+                    {"content": "this is not json", "finish_reason": "length"}
+                ]
+            },
+        )
+        emitted, reviewer, exc = _run_review_env(LINES, transport, armed_env())
+        self.assertIsNone(emitted)
+        self.assertIn("parse failure settled", str(exc))
+        self.assertEqual(len(transport.deep_calls()), 1)
+        self.assertEqual(reviewer.last_run_info.to_dict()["length_retries"], [])
 
 
 _TOKEN_RES = [

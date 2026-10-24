@@ -89,6 +89,25 @@ the semaphore battery and the readiness of the measurement
 harness.  No effect number is claimed here; the paid validation
 is designed in the paper (§4) and stays PARKED until Alejandro's
 run paper, with its line cap, says otherwise.
+
+THE RUN-344 AMENDMENT (ADENDA-ARREGLO-TOPE-20261024.md,
+2026-10-24, declared there before this code): run nº 344 died
+because the deep passes inherited the v1 base's 4096 output
+ceiling — on two PRs the model's reasoning alone exhausted it
+and the response came back empty with finish_reason 'length',
+and the portal's retries reused the same budget to the same
+result.  Two repairs, in this shared layer (the v2.5 and the
+v2.6 inherit both whole): the deep-pass output budget is now
+this family's own resolvable setting
+(``DEFAULT_DEEP_MAX_OUTPUT_TOKENS``), and a deep or fallback
+response that returns empty with finish_reason 'length' earns
+ONE in-agent retry at double budget — guarded by the remaining
+spend brake, its cost folded into the same cumulative check,
+the event settled in the run info — before failing closed
+exactly as before.  No prompt, no gate, no other error path
+moves; ``REVIEWER_VERSION`` stays "llm-reviewer/2.4.0" (the
+reviewer's identity, not its bytes — the amendment and the new
+image digest carry the code identity, as in the whole line).
 """
 
 from __future__ import annotations
@@ -143,6 +162,68 @@ from .llm_reviewer_v23 import (
 
 
 REVIEWER_VERSION = "llm-reviewer/2.4.0"
+
+# The run-344 fix (ADENDA-ARREGLO-TOPE-20261024.md §2, declared
+# there before this code).  The deep passes used to read the v1
+# base's shared default (LLMSettings.max_output_tokens, 4096) —
+# a ceiling no paper of this family ever chose for them, and the
+# one run nº 344 died under: reasoning alone exhausted it and
+# the response came back empty.  16384 is 4x that ceiling and
+# more than the largest whole-PR completion total observed in
+# run nº 344 (14,132 tokens over <=6 calls), now available to a
+# SINGLE pass; it sits far inside the GPT-5 family's admitted
+# completion ceiling (128k), so the binding constraint stays the
+# spend brake: pre-flight 2 prices the armed payload as built,
+# and on the largest contexts the price is declared degradation
+# (settled, survivable), never a silent length death (total).
+DEFAULT_DEEP_MAX_OUTPUT_TOKENS = 16384
+# A length-empty response retries ONCE, in-agent, at this
+# multiple of the pass budget (32768 at the default above).
+LENGTH_RETRY_MULTIPLIER = 2
+
+
+def _resolve_deep_max_output_tokens(
+    env: Mapping[str, str], config: Mapping[str, str]
+) -> int:
+    """Resolve the deep-pass output budget — the triage
+    resolver's exact pattern and fail-closed discipline, one
+    budget line over: RB_CONFIG_DEEP_MAX_OUTPUT_TOKENS, then
+    RB_LLM_V24_DEEP_MAX_OUTPUT_TOKENS, then the default."""
+
+    raw = (config.get("deep_max_output_tokens") or "").strip()
+    source = "RB_CONFIG_DEEP_MAX_OUTPUT_TOKENS"
+    if not raw:
+        raw = (env.get("RB_LLM_V24_DEEP_MAX_OUTPUT_TOKENS") or "").strip()
+        source = "RB_LLM_V24_DEEP_MAX_OUTPUT_TOKENS"
+    if not raw:
+        return DEFAULT_DEEP_MAX_OUTPUT_TOKENS
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise RealLLMRefused(
+            f"backend=llm v2.4 refused: {source}={raw!r} is not an integer"
+        ) from exc
+    if value <= 0:
+        raise RealLLMRefused(
+            f"backend=llm v2.4 refused: {source} must be positive"
+        )
+    return value
+
+
+def _is_length_empty(content: object, finish_reason: object) -> bool:
+    """The run-344 death, recognized exactly: the endpoint
+    closed the response for length ('length') and NO content
+    came back — an empty or blank string, or no content at
+    all — because the reasoning consumed the whole output
+    budget before the first content token.  Any other shape
+    (content present, another finish reason) is not this mode
+    and keeps its historical path, without retry."""
+
+    if finish_reason != "length":
+        return False
+    if content is None:
+        return True
+    return isinstance(content, str) and content.strip() == ""
 
 # Production-ledger codes (paper §2c).  The first is the line's
 # own gate check code, reused because the settlement IS that
@@ -327,6 +408,14 @@ class LLMRunInfoV24:
     degradation: dict[str, object] | None = None
     triage_max_output_tokens: int = 0
     parse_failures: list[dict[str, object]] = field(default_factory=list)
+    # The run-344 fix (ADENDA-ARREGLO-TOPE-20261024.md): the
+    # deep-pass output budget in force for this run (the mirror
+    # of triage_max_output_tokens, one budget line over), and one
+    # settled record per length-empty retry event — the pass,
+    # both budgets, and the outcome ("recovered", "still_empty"
+    # or "refused_spend_cap").
+    deep_max_output_tokens: int = 0
+    length_retries: list[dict[str, object]] = field(default_factory=list)
     # The production ledger (paper §2c): every birth this reviewer
     # declared non-citable, with its code and reason — settled by
     # the conversion (no pattern / pattern mismatch / declared by
@@ -369,6 +458,8 @@ class LLMRunInfoV24:
             "degradation": self.degradation,
             "triage_max_output_tokens": self.triage_max_output_tokens,
             "parse_failures": [dict(r) for r in self.parse_failures],
+            "deep_max_output_tokens": self.deep_max_output_tokens,
+            "length_retries": [dict(r) for r in self.length_retries],
             "production_ledger": [dict(r) for r in self.production_ledger],
             "production_ledger_by_code": by_code,
             "shaping": dict(self.shaping) if self.shaping is not None else None,
@@ -416,6 +507,7 @@ class LLMReviewerV24:
         class_guidance: Mapping[str, str] | None = None,
         gate_version: str = GATE_V1_VERSION,
         triage_max_output_tokens: int = DEFAULT_TRIAGE_MAX_OUTPUT_TOKENS,
+        deep_max_output_tokens: int = DEFAULT_DEEP_MAX_OUTPUT_TOKENS,
     ) -> None:
         self.settings = settings
         self.context_token_budget = context_token_budget
@@ -433,6 +525,12 @@ class LLMReviewerV24:
         )
         self.gate_version = gate_version
         self.triage_max_output_tokens = triage_max_output_tokens
+        # The run-344 fix: this family's own deep-pass budget,
+        # and the escalated budget of its single length retry.
+        self.deep_max_output_tokens = deep_max_output_tokens
+        self.length_retry_max_output_tokens = (
+            deep_max_output_tokens * LENGTH_RETRY_MULTIPLIER
+        )
         self.last_run_info: LLMRunInfoV24 | None = None
 
     @classmethod
@@ -454,6 +552,9 @@ class LLMReviewerV24:
             class_guidance=class_guidance,
             gate_version=gate_version,
             triage_max_output_tokens=_resolve_triage_max_output_tokens(
+                env, config
+            ),
+            deep_max_output_tokens=_resolve_deep_max_output_tokens(
                 env, config
             ),
         )
@@ -516,8 +617,11 @@ class LLMReviewerV24:
             "contents of the touched files at the PR head.\n\n"
             f"=== DIFF ===\n{diff_text}\n\n{context_text}"
         )
+        # The output cap is this family's own deep budget
+        # (ADENDA-ARREGLO-TOPE-20261024.md), not the v1 base's
+        # shared settings default the run nº 344 died under.
         return self._payload(
-            system_prompt, user_content, self.settings.max_output_tokens
+            system_prompt, user_content, self.deep_max_output_tokens
         )
 
     def build_fallback_payload(
@@ -539,8 +643,10 @@ class LLMReviewerV24:
             "pass covers only the marks the triage made.\n\n"
             f"=== DIFF ===\n{diff_text}"
         )
+        # Same deep budget line as the deep passes (the fallback
+        # IS a production pass; adenda cited in build_deep_payload).
         return self._payload(
-            system_prompt, user_content, self.settings.max_output_tokens
+            system_prompt, user_content, self.deep_max_output_tokens
         )
 
     # -- guard arithmetic ---------------------------------------------------
@@ -631,6 +737,63 @@ class LLMReviewerV24:
                 "without emitting findings"
             )
         return cost
+
+    def _call_deep(
+        self,
+        payload: dict[str, object],
+        pass_label: str,
+        info: LLMRunInfoV24,
+        running: dict[str, float],
+    ) -> tuple[object, object]:
+        """Run one production call (a deep pass or the mixed
+        fallback) and account it — with the run-344 fix
+        (ADENDA-ARREGLO-TOPE-20261024.md §2b): a response that
+        comes back EMPTY with finish_reason 'length' — the model
+        spent the whole output budget reasoning and emitted no
+        content — earns ONE in-agent retry at
+        LENGTH_RETRY_MULTIPLIER x the pass budget, before the
+        caller settles the content and, if it still fails, fails
+        closed exactly as before.  The retry is guarded by the
+        brake: it fires only if the accumulated actual cost plus
+        the retry's worst case still fits RB_MAX_SPEND_USD;
+        otherwise there is no second call and the original
+        content takes the historical fail-closed path.  The
+        retry's actual cost folds into the same cumulative
+        check (_account, unmodified).  Every event is settled in
+        info.length_retries.  No other response — HTTP errors,
+        malformed JSON with content, any other finish reason —
+        changes behaviour."""
+
+        content, usage, finish_reason = self._call(payload)
+        info.calls += 1
+        self._account(payload, content, usage, info, running)
+        if not _is_length_empty(content, finish_reason):
+            return content, finish_reason
+        record: dict[str, object] = {
+            "pass": pass_label,
+            "first_max_output_tokens": int(payload["max_completion_tokens"]),
+            "retry_max_output_tokens": self.length_retry_max_output_tokens,
+            "outcome": "refused_spend_cap",
+        }
+        info.length_retries.append(record)
+        retry_payload = dict(payload)
+        retry_payload["max_completion_tokens"] = (
+            self.length_retry_max_output_tokens
+        )
+        if (
+            running["cost"] + self.worst_case_estimate(retry_payload)
+            > self.settings.max_spend_usd
+        ):
+            return content, finish_reason
+        content, usage, finish_reason = self._call(retry_payload)
+        info.calls += 1
+        self._account(retry_payload, content, usage, info, running)
+        record["outcome"] = (
+            "still_empty"
+            if _is_length_empty(content, finish_reason)
+            else "recovered"
+        )
+        return content, finish_reason
 
 
     # -- the review ----------------------------------------------------------
@@ -736,6 +899,7 @@ class LLMReviewerV24:
 
         info.passes = [SELECTION_PASS]
         info.triage_max_output_tokens = self.triage_max_output_tokens
+        info.deep_max_output_tokens = self.deep_max_output_tokens
         info.context_token_budget = self.context_token_budget
         info.context_estimated_tokens = context_tokens
         info.context_files_included = included
@@ -805,10 +969,10 @@ class LLMReviewerV24:
                 }
             for name in admitted:
                 payload = deep_payloads[name]
-                content, usage, finish_reason = self._call(payload)
-                info.calls += 1
                 info.passes.append(name)
-                self._account(payload, content, usage, info, running)
+                content, finish_reason = self._call_deep(
+                    payload, name, info, running
+                )
                 self._collect(
                     content,
                     name,
@@ -832,10 +996,10 @@ class LLMReviewerV24:
                 "deep_passes_dropped": list(selected_names),
                 "fallback_single_pass": True,
             }
-            content, usage, finish_reason = self._call(fallback_payload)
-            info.calls += 1
             info.passes.append(FALLBACK_PASS)
-            self._account(fallback_payload, content, usage, info, running)
+            content, finish_reason = self._call_deep(
+                fallback_payload, FALLBACK_PASS, info, running
+            )
             self._collect(
                 content,
                 None,
@@ -1140,6 +1304,8 @@ __all__ = [
     "CODE_DECLARED_UNVERIFIABLE",
     "CODE_NO_PATTERN",
     "CODE_PATTERN_MISMATCH",
+    "DEFAULT_DEEP_MAX_OUTPUT_TOKENS",
+    "LENGTH_RETRY_MULTIPLIER",
     "LLMReviewerV24",
     "LLMRunInfoV24",
     "REVIEWER_VERSION",
