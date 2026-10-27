@@ -268,6 +268,9 @@ class LLMReviewerV26(LLMReviewerV25):
             # (ADENDA-ARREGLO-TOPE-20261024.md §3).
             deep_max_output_tokens=base.deep_max_output_tokens,
             length_retries=base.length_retries,
+            # The run-373 recalibration's observability, carried
+            # through (ADENDA-RECALIBRACION-PRESUPUESTO-20261027.md).
+            deep_planning_output_tokens=base.deep_planning_output_tokens,
             production_ledger=base.production_ledger,
             shaping=base.shaping,
             lessons_sha256=base.lessons_sha256,

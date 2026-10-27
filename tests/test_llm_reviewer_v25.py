@@ -73,7 +73,7 @@ FROZEN_V25 = dict(
     FROZEN_FILE_SHA256,
     **{
         "llm_reviewer_v24.py":
-            "3e01b4743bfcdfb6e0dc74e082097eb43cdd8f06e1532ec30d5bc49f8f0240d1",
+            "3b33238f4fc53bc368da47ccaf12f8715bc13cec300ac9b506182396116f5677",
     },
 )
 
