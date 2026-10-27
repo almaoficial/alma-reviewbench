@@ -41,6 +41,17 @@ emission schema's mechanical correctness, verified dry:
   a second length-empty fails closed exactly as before; a
   brake without room refuses the retry (no second call) and
   fails closed as before; no other error retries.
+- the run-373 recalibration
+  (ADENDA-RECALIBRACION-PRESUPUESTO-20261027.md): pre-flight 2
+  prices a production payload's output at the family's
+  planning line (default 6144; config/env override; invalid
+  refuses) — never above the payload's own cap, which stays
+  16384 in the payload itself; on a large-context PR where
+  the old arithmetic (the line forced to the ceiling)
+  degrades planned passes, the default line admits them all;
+  and the brake still cuts on REAL spend: a deep call whose
+  reported usage exceeds RB_MAX_SPEND_USD fails closed in the
+  cumulative check exactly as before, planning or not.
 
 No dry test here measures any EFFECT of the discipline on real
 production rates: that is the paper's §3 caveat, and it is why
@@ -76,6 +87,7 @@ from agent.llm_reviewer_v24 import (  # noqa: E402
     CODE_NO_PATTERN,
     CODE_PATTERN_MISMATCH,
     DEFAULT_DEEP_MAX_OUTPUT_TOKENS,
+    DEFAULT_DEEP_PLANNING_OUTPUT_TOKENS,
     LENGTH_RETRY_MULTIPLIER,
     REVIEWER_VERSION,
     LLMReviewerV24,
@@ -719,6 +731,162 @@ class LengthRetryTests(unittest.TestCase):
         self.assertIn("parse failure settled", str(exc))
         self.assertEqual(len(transport.deep_calls()), 1)
         self.assertEqual(reviewer.last_run_info.to_dict()["length_retries"], [])
+
+
+BIG_PATH = "app/big.py"
+BIG_LINES = [
+    f"value_{i:05d} = compute_offset(row_{i:05d}) + step" for i in range(2800)
+]
+BIG_MARKS = [
+    "correctness",
+    "reliability",
+    "maintainability",
+    "testing",
+    "security",
+]
+
+
+def _run_big_review(env):
+    """Drive review() over a large-context PR: a 2,800-line
+    head file (context ~42k tokens, inside the band where run
+    nº 373 degraded) touched by a one-line diff, with the
+    selection marking the first five general categories.
+    Returns (run_info_dict, transport)."""
+
+    changed = "value_00000 = compute_offset(row_00000) + changed_step"
+    head = [changed] + BIG_LINES[1:]
+    diff_text = (
+        f"diff --git a/{BIG_PATH} b/{BIG_PATH}\n"
+        f"--- a/{BIG_PATH}\n+++ b/{BIG_PATH}\n"
+        "@@ -1,3 +1,3 @@\n"
+        f"-{BIG_LINES[0]}\n+{changed}\n {BIG_LINES[1]}\n {BIG_LINES[2]}\n"
+    )
+    transport = EmissionTransport(marks=BIG_MARKS)
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        target = repo / BIG_PATH
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("\n".join(head) + "\n", encoding="utf-8")
+        reviewer = LLMReviewerV24.from_env(env, CONFIG_V14, transport=transport)
+        reviewer.review(
+            diff_text=diff_text,
+            diff=parse_unified_diff(diff_text),
+            config=CONFIG_V14,
+            repo_root=repo,
+        )
+        return reviewer.last_run_info.to_dict(), transport
+
+
+class RealSpendTransport:
+    """Scripted transport whose deep calls REPORT real usage
+    far above the brake: planning may admit the pass, but the
+    cumulative reported-cost check must still fail closed."""
+
+    def __init__(self):
+        self.calls = []
+
+    def __call__(self, url, headers, payload, timeout):
+        self.calls.append(payload)
+        name = pass_name_of(payload)
+        if name == "selection":
+            content = {"candidates": [{"mark": "correctness", "reason": "s"}]}
+            usage = {"prompt_tokens": 100, "completion_tokens": 10}
+        else:
+            content = {"findings": []}
+            usage = {"prompt_tokens": 100, "completion_tokens": 200000}
+        body = {
+            "choices": [{"message": {"content": json.dumps(content)}}],
+            "usage": usage,
+        }
+        return 200, json.dumps(body).encode("utf-8")
+
+
+class PlanningBudgetTests(unittest.TestCase):
+    def test_default_planning_line_and_resolution(self):
+        reviewer = LLMReviewerV24.from_env(
+            armed_env(), CONFIG_V14, transport=EmissionTransport()
+        )
+        self.assertEqual(DEFAULT_DEEP_PLANNING_OUTPUT_TOKENS, 6144)
+        self.assertEqual(reviewer.deep_planning_output_tokens, 6144)
+        # The payload keeps its own ceiling: the line prices
+        # planning, it never rewrites the armed payload.
+        deep = reviewer.build_deep_payload("correctness", "D", "C")
+        self.assertEqual(deep["max_completion_tokens"], 16384)
+        # Planning prices output at the line, below worst case;
+        # forced to the ceiling it reproduces the old arithmetic.
+        self.assertLess(
+            reviewer.planning_estimate(deep), reviewer.worst_case_estimate(deep)
+        )
+        at_ceiling = LLMReviewerV24.from_env(
+            armed_env(RB_LLM_V24_DEEP_PLANNING_OUTPUT_TOKENS="16384"),
+            CONFIG_V14,
+            transport=EmissionTransport(),
+        )
+        self.assertEqual(
+            at_ceiling.planning_estimate(deep),
+            at_ceiling.worst_case_estimate(deep),
+        )
+
+        config = dict(CONFIG_V14, deep_planning_output_tokens="4096")
+        reviewer = LLMReviewerV24.from_env(
+            armed_env(), config, transport=EmissionTransport()
+        )
+        self.assertEqual(reviewer.deep_planning_output_tokens, 4096)
+
+        env = armed_env(RB_LLM_V24_DEEP_PLANNING_OUTPUT_TOKENS="8192")
+        reviewer = LLMReviewerV24.from_env(
+            env, CONFIG_V14, transport=EmissionTransport()
+        )
+        self.assertEqual(reviewer.deep_planning_output_tokens, 8192)
+
+        for bad in ("abc", "0", "-5"):
+            with self.subTest(bad=bad):
+                env = armed_env(RB_LLM_V24_DEEP_PLANNING_OUTPUT_TOKENS=bad)
+                with self.assertRaises(RealLLMRefused):
+                    LLMReviewerV24.from_env(
+                        env, CONFIG_V14, transport=EmissionTransport()
+                    )
+
+    def test_large_context_admission_restored(self):
+        # Default line: every planned pass runs on the big PR.
+        info, _ = _run_big_review(armed_env())
+        self.assertEqual(info["deep_planning_output_tokens"], 6144)
+        self.assertEqual(info["passes"], ["selection"] + BIG_MARKS)
+        self.assertIsNone(info["degradation"])
+
+        # The old arithmetic (line forced to the ceiling, as
+        # pre-flight 2 priced before this recalibration): the
+        # same PR degrades, dropping the last two planned
+        # passes — the run-373 mode, reproduced dry.
+        info, _ = _run_big_review(
+            armed_env(RB_LLM_V24_DEEP_PLANNING_OUTPUT_TOKENS="16384")
+        )
+        self.assertEqual(info["deep_planning_output_tokens"], 16384)
+        self.assertEqual(
+            info["degradation"],
+            {
+                "reason": "spend_cap",
+                "deep_passes_planned": 5,
+                "deep_passes_run": 3,
+                "deep_passes_dropped": ["testing", "security"],
+                "fallback_single_pass": False,
+            },
+        )
+
+    def test_brake_still_cuts_on_real_spend(self):
+        # Planning admits the deep pass (its planning price
+        # fits), the call happens, and its REPORTED usage blows
+        # through the brake: the cumulative check fails closed
+        # exactly as before the recalibration.
+        transport = RealSpendTransport()
+        emitted, reviewer, exc = _run_review_env(
+            LINES, transport, armed_env()
+        )
+        self.assertIsNone(emitted)
+        self.assertIsNotNone(exc)
+        self.assertIn("cumulative reported cost", str(exc))
+        self.assertIn("exceeds RB_MAX_SPEND_USD", str(exc))
+        self.assertEqual(len(transport.calls), 2)
 
 
 _TOKEN_RES = [

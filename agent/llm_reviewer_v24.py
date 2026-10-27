@@ -108,6 +108,30 @@ exactly as before.  No prompt, no gate, no other error path
 moves; ``REVIEWER_VERSION`` stays "llm-reviewer/2.4.0" (the
 reviewer's identity, not its bytes — the amendment and the new
 image digest carry the code identity, as in the whole line).
+
+THE RUN-373 AMENDMENT
+(ADENDA-RECALIBRACION-PRESUPUESTO-20261027.md, 2026-10-27,
+declared there before this code): run nº 373 finished but
+its recall collapsed — the autopsy's floor 1.  Pre-flight 2
+priced every deep payload at its full output ceiling
+(16,384), so at planning prices each pass projected
+US$1.2288 of output alone and the unchanged per-PR brake
+(US$6.50) bought far fewer passes than the design plans:
+degradation in 19 of 25 PRs, 54 deep passes dropped,
+candidates 168 -> 108 — while the real spend came in BELOW
+the base run's, because observed deep completions average
+~2,336 tokens (PR-average maximum ~5,164), nowhere near the
+ceiling the projection assumed.  The repair, in this same
+shared layer: admission planning prices a production
+payload's output at this family's own planning line
+(``DEFAULT_DEEP_PLANNING_OUTPUT_TOKENS``, resolved like its
+sibling budgets and declared per run in the run info),
+never above the payload's own cap.  What guards real money
+keeps pricing the true worst case, unmodified: pre-flight 1,
+the length-retry guard, and the cumulative reported-cost
+check that fails closed against RB_MAX_SPEND_USD.  The
+gate 1.5.0 and its origin discards (the autopsy's floor 2)
+are expressly NOT touched by this amendment.
 """
 
 from __future__ import annotations
@@ -197,6 +221,61 @@ def _resolve_deep_max_output_tokens(
         source = "RB_LLM_V24_DEEP_MAX_OUTPUT_TOKENS"
     if not raw:
         return DEFAULT_DEEP_MAX_OUTPUT_TOKENS
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise RealLLMRefused(
+            f"backend=llm v2.4 refused: {source}={raw!r} is not an integer"
+        ) from exc
+    if value <= 0:
+        raise RealLLMRefused(
+            f"backend=llm v2.4 refused: {source} must be positive"
+        )
+    return value
+
+
+# The run-373 recalibration
+# (ADENDA-RECALIBRACION-PRESUPUESTO-20261027.md §2, declared
+# there before this code).  Pre-flight 2 used to price every
+# deep payload at its full output ceiling: with the ceiling
+# at 16384, the projected output component per pass became
+# US$1.2288 and the per-PR brake bought far fewer passes
+# than the design plans — the system braked on ASSUMED price,
+# not real spend (run nº 373 cost less than the base while
+# dropping 54 deep passes).  The planning line prices a
+# production pass's output at observed usage instead: in run
+# nº 373 deep completions averaged ~2,336 tokens per call
+# (PR-average maximum ~5,164), so 6144 sits above every
+# observed PR-average with headroom, at ~2.6x the observed
+# mean — and deliberately NOT at the old 4096, which today's
+# passes demonstrably exceed (the evidence schema writes
+# more, and reasoning counts as completion): planning below
+# observed usage would shift the protection onto the
+# cumulative real-cost brake mid-plan and turn declared
+# degradation into whole-PR deaths.  This line feeds ONLY
+# the planning estimates (pre-flight 2 admission and the
+# fallback affordability check); the payload's own cap and
+# every worst-case guard on real money are untouched.
+DEFAULT_DEEP_PLANNING_OUTPUT_TOKENS = 6144
+
+
+def _resolve_deep_planning_output_tokens(
+    env: Mapping[str, str], config: Mapping[str, str]
+) -> int:
+    """Resolve the deep-pass planning line — the deep
+    budget resolver's exact pattern and fail-closed
+    discipline, one line over:
+    RB_CONFIG_DEEP_PLANNING_OUTPUT_TOKENS, then
+    RB_LLM_V24_DEEP_PLANNING_OUTPUT_TOKENS, then the
+    default."""
+
+    raw = (config.get("deep_planning_output_tokens") or "").strip()
+    source = "RB_CONFIG_DEEP_PLANNING_OUTPUT_TOKENS"
+    if not raw:
+        raw = (env.get("RB_LLM_V24_DEEP_PLANNING_OUTPUT_TOKENS") or "").strip()
+        source = "RB_LLM_V24_DEEP_PLANNING_OUTPUT_TOKENS"
+    if not raw:
+        return DEFAULT_DEEP_PLANNING_OUTPUT_TOKENS
     try:
         value = int(raw)
     except ValueError as exc:
@@ -416,6 +495,13 @@ class LLMRunInfoV24:
     # or "refused_spend_cap").
     deep_max_output_tokens: int = 0
     length_retries: list[dict[str, object]] = field(default_factory=list)
+    # The run-373 recalibration
+    # (ADENDA-RECALIBRACION-PRESUPUESTO-20261027.md): the
+    # planning line this run's pre-flight 2 priced production
+    # output at — settled per run so any degradation or death
+    # is attributable to the exact line that governed its
+    # planning.
+    deep_planning_output_tokens: int = 0
     # The production ledger (paper §2c): every birth this reviewer
     # declared non-citable, with its code and reason — settled by
     # the conversion (no pattern / pattern mismatch / declared by
@@ -460,6 +546,7 @@ class LLMRunInfoV24:
             "parse_failures": [dict(r) for r in self.parse_failures],
             "deep_max_output_tokens": self.deep_max_output_tokens,
             "length_retries": [dict(r) for r in self.length_retries],
+            "deep_planning_output_tokens": self.deep_planning_output_tokens,
             "production_ledger": [dict(r) for r in self.production_ledger],
             "production_ledger_by_code": by_code,
             "shaping": dict(self.shaping) if self.shaping is not None else None,
@@ -508,6 +595,9 @@ class LLMReviewerV24:
         gate_version: str = GATE_V1_VERSION,
         triage_max_output_tokens: int = DEFAULT_TRIAGE_MAX_OUTPUT_TOKENS,
         deep_max_output_tokens: int = DEFAULT_DEEP_MAX_OUTPUT_TOKENS,
+        deep_planning_output_tokens: int = (
+            DEFAULT_DEEP_PLANNING_OUTPUT_TOKENS
+        ),
     ) -> None:
         self.settings = settings
         self.context_token_budget = context_token_budget
@@ -531,6 +621,10 @@ class LLMReviewerV24:
         self.length_retry_max_output_tokens = (
             deep_max_output_tokens * LENGTH_RETRY_MULTIPLIER
         )
+        # The run-373 recalibration: the planning line
+        # pre-flight 2 prices production output at (admission
+        # only — never the payload, never the brake).
+        self.deep_planning_output_tokens = deep_planning_output_tokens
         self.last_run_info: LLMRunInfoV24 | None = None
 
     @classmethod
@@ -556,6 +650,9 @@ class LLMReviewerV24:
             ),
             deep_max_output_tokens=_resolve_deep_max_output_tokens(
                 env, config
+            ),
+            deep_planning_output_tokens=(
+                _resolve_deep_planning_output_tokens(env, config)
             ),
         )
 
@@ -662,6 +759,29 @@ class LLMReviewerV24:
         return self.settings.cost_usd(
             estimated_input, int(payload["max_completion_tokens"])
         )
+
+    def planning_estimate(self, payload: dict[str, object]) -> float:
+        """Planning price of ONE production payload (the run-373
+        recalibration, ADENDA-RECALIBRACION-PRESUPUESTO-20261027.md
+        §2): the input priced as estimated, the output priced at
+        this family's planning line
+        (``deep_planning_output_tokens``) — observed usage, never
+        above the payload's own cap.  This estimate decides ONLY
+        which production passes pre-flight 2 plans under the
+        brake; it never prices a real call.  The guards on real
+        money keep the worst case: pre-flight 1, the
+        length-retry guard and the cumulative reported-cost
+        check in ``_account`` are unmodified."""
+
+        estimated_input = sum(
+            _estimate_tokens(str(message["content"]))
+            for message in payload["messages"]
+        )
+        planned_output = min(
+            int(payload["max_completion_tokens"]),
+            self.deep_planning_output_tokens,
+        )
+        return self.settings.cost_usd(estimated_input, planned_output)
 
     # -- one model call -----------------------------------------------------
 
@@ -900,6 +1020,7 @@ class LLMReviewerV24:
         info.passes = [SELECTION_PASS]
         info.triage_max_output_tokens = self.triage_max_output_tokens
         info.deep_max_output_tokens = self.deep_max_output_tokens
+        info.deep_planning_output_tokens = self.deep_planning_output_tokens
         info.context_token_budget = self.context_token_budget
         info.context_estimated_tokens = context_tokens
         info.context_files_included = included
@@ -942,7 +1063,11 @@ class LLMReviewerV24:
         selected_names = [name for _, name in selected]
 
         # ---- Pre-flight 2 (inherited): plan the deep passes under
-        # the SHARED cap, in priority order.
+        # the SHARED cap, in priority order.  Admission prices
+        # each payload at the planning line (run-373
+        # recalibration): observed output usage, not the
+        # payload's full ceiling — the brake itself still
+        # guards real spend through the cumulative check.
         deep_payloads = {
             name: self.build_deep_payload(name, diff_text, context_text)
             for _, name in selected
@@ -951,10 +1076,10 @@ class LLMReviewerV24:
         dropped: list[str] = []
         planned_cost = selection_cost
         for name in selected_names:
-            worst = self.worst_case_estimate(deep_payloads[name])
-            if planned_cost + worst <= cap:
+            planned = self.planning_estimate(deep_payloads[name])
+            if planned_cost + planned <= cap:
                 admitted.append(name)
-                planned_cost += worst
+                planned_cost += planned
             else:
                 dropped.append(name)
 
@@ -988,7 +1113,7 @@ class LLMReviewerV24:
         # ---- Degenerate case (inherited): one mixed pass over the
         # marked marks, both families.
         fallback_payload = self.build_fallback_payload(selected, diff_text)
-        if selection_cost + self.worst_case_estimate(fallback_payload) <= cap:
+        if selection_cost + self.planning_estimate(fallback_payload) <= cap:
             info.degradation = {
                 "reason": "spend_cap",
                 "deep_passes_planned": len(selected),
