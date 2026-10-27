@@ -144,6 +144,14 @@ fuentes** — el resumen de la corrida de Actions y la página
 del paquete en GHCR — antes de asentarse. Ese digest es el
 `RB_IMAGE_SHA256` de las tres configs.
 
+**Digest asentado (23/10/2026):**
+`ghcr.io/almaoficial/alma-reviewbench@sha256:a46ca3791f13936b459c726253ba9a484b6d363b9a067a9e6859e26620b3f501`
+— publicado por el workflow `reviewbench-image`, corrida
+**nº 9: SUCCESS** (37 s), y **verificado en dos fuentes**: el
+resumen de la corrida y la página del paquete en GHCR (tag
+`dev`, Latest) muestran el mismo digest. Este es el valor que
+mañana va como `RB_IMAGE_SHA256` en la config de cada brazo.
+
 ## 5. El procedimiento de mañana, por intento
 
 1. **Compuerta de saldo:** saldo de la cuenta verificado

@@ -285,3 +285,36 @@ otra vía**.
 — Adenda al pre-registro de validación del 24/10/2026,
 escrita el 2026-10-24 ANTES del código del arreglo, sobre el
 diagnóstico asentado de la nº 344.
+
+**Posdata de publicación — paso 1 ejecutado (2026-10-24):** el
+delta de 10 rutas declarado en la §8 se empujó a
+`almaoficial/alma-reviewbench` (`main`) por el flujo asentado:
+commit **`4d68fccc7d282348992e5bae4ff744d82c49dea1`** sobre
+`49d56fd9…`, con verificación 10/10 byte por byte contra los
+locales (SHAs de blob en el REGISTRO, entrada de cierre del
+sync del 24/10). El bloqueo del primer escalón quedó resuelto.
+**El digest sigue pendiente del paso 2:** el disparo del
+workflow `reviewbench-image` (tag `dev`, `package_dir` `.`)
+por el navegador con la sesión de Alejandro; hasta que el
+digest verificado en dos fuentes se asiente en el REGISTRO,
+ninguna corrida puede usar el arreglo — exactamente como
+declara el cierre de esta adenda. (Esta posdata es local al
+cierre del sync; viaja al repo en el próximo.)
+
+**Posdata de publicación — paso 2 ejecutado (2026-10-24):
+publicación CERRADA.** El workflow `reviewbench-image` se
+disparó por el navegador con la sesión de Alejandro sobre
+`main` @ `4d68fccc…`: **corrida nº 10, success**. Digest de
+la imagen nueva, verificado en **dos fuentes** de GitHub
+idénticas carácter a carácter (el resumen de la corrida de
+Actions y la página del paquete en GHCR):
+`ghcr.io/almaoficial/alma-reviewbench@sha256:25c4b7e4d60cc05f43af26f07db24f94313692b73c5f480a6ce90c4bb431c106`.
+Ese digest queda asentado como el `RB_IMAGE_SHA256` vigente
+para toda corrida futura bajo esta enmienda. **La
+publicación queda CERRADA**: empuje verificado 10/10 byte
+por byte (paso 1) + imagen publicada con digest verificado
+en dos fuentes (paso 2). El brazo corregido está listo;
+ninguna corrida se lanzó con esta publicación, y correr de
+nuevo se decide con el cheque del 5/11. (Esta posdata es
+local, como la del paso 1; viaja al repo en el próximo
+sync.)
