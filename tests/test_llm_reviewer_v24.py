@@ -368,9 +368,16 @@ class EmissionSchemaTests(unittest.TestCase):
         self.assertEqual(info["malformed_findings"], 0)
         codes = [r["code"] for r in info["production_ledger"]]
         self.assertEqual(codes, [CODE_NO_PATTERN, CODE_NO_PATTERN])
+        # Gate-form amendment (ADENDA-PUERTA-FORMA-20261027):
+        # these two claims assert nothing and nothing can be
+        # extracted from their prose against their citations, so
+        # they still settle under the same code — but the
+        # settlement now happens at the SHAPING stage, after the
+        # extraction attempt, not in the conversion (before this
+        # amendment every record here carried pass "correctness").
         self.assertTrue(
             all(
-                r["pass"] == "correctness"
+                r["pass"] == "production_shaping"
                 for r in info["production_ledger"]
             )
         )
@@ -986,6 +993,85 @@ class BatteryDryRunV24Tests(unittest.TestCase):
                     self.assertTrue(normalize_claim(emitted[0]).conforming)
                     runs += 1
         self.assertEqual(runs, 16)
+
+
+class GateFormAmendmentTests(unittest.TestCase):
+    """The gate-form amendment (ADENDA-PUERTA-FORMA-20261027):
+    a finding with no declared pattern no longer dies in the
+    conversion — the shaping stage's extraction decides.  The
+    measured death this repairs: runs nº 373/374 settled
+    29/36 findings under sin_patron_concreto_en_el_reclamo in
+    the conversion, before the shaper's Case B could run."""
+
+    def test_no_pattern_with_judgeable_content_survives(self):
+        finding = _finding(
+            message=(
+                "The handler invokes subprocess.run with the "
+                "shell flag enabled."
+            ),
+        )
+        del finding["pattern"]
+        transport = EmissionTransport(
+            marks=["correctness"],
+            deep={"correctness": {"findings": [finding]}},
+        )
+        emitted, info, _ = _run_review(LINES, transport)
+
+        # Born in contract form by extraction at the shaping
+        # stage: the mined token is declared in the message,
+        # the ledger stays empty, and the claim conforms.
+        self.assertEqual(len(emitted), 1)
+        self.assertIn("`subprocess.run`", emitted[0].message)
+        self.assertEqual(info["production_ledger"], [])
+        self.assertEqual(info["shaping"]["origins"]["mined"], 1)
+        self.assertTrue(normalize_claim(emitted[0]).conforming)
+
+    def test_empty_pattern_list_also_flows_to_extraction(self):
+        finding = _finding(
+            message=(
+                "The handler invokes subprocess.run with the "
+                "shell flag enabled."
+            ),
+            pattern=[],
+        )
+        transport = EmissionTransport(
+            marks=["correctness"],
+            deep={"correctness": {"findings": [finding]}},
+        )
+        emitted, info, _ = _run_review(LINES, transport)
+        self.assertEqual(len(emitted), 1)
+        self.assertEqual(info["production_ledger"], [])
+
+    def test_no_pattern_without_content_still_settles(self):
+        finding = _finding(
+            start_line=2,
+            end_line=2,
+            message="The function ignores its argument.",
+            evidence=[LINES[1]],
+        )
+        del finding["pattern"]
+        transport = EmissionTransport(
+            marks=["correctness"],
+            deep={"correctness": {"findings": [finding]}},
+        )
+        emitted, info, _ = _run_review(LINES, transport)
+
+        self.assertEqual(emitted, [])
+        self.assertEqual(
+            info["production_ledger_by_code"],
+            {CODE_NO_PATTERN: 1},
+        )
+        record = info["production_ledger"][0]
+        self.assertEqual(record["pass"], "production_shaping")
+
+    def test_gate_resolution_admits_v151(self):
+        reviewer = LLMReviewerV24.from_env(
+            armed_env(), dict(CONFIG_V14, gate="v151"),
+            transport=EmissionTransport(),
+        )
+        self.assertEqual(
+            reviewer.gate_version, "alma-evidence-gate/1.5.1"
+        )
 
 
 if __name__ == "__main__":

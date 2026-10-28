@@ -132,6 +132,36 @@ the length-retry guard, and the cumulative reported-cost
 check that fails closed against RB_MAX_SPEND_USD.  The
 gate 1.5.0 and its origin discards (the autopsy's floor 2)
 are expressly NOT touched by this amendment.
+
+THE GATE-FORM AMENDMENT (ADENDA-PUERTA-FORMA-20261027.md,
+2026-10-27, declared there before this code): the autopsies
+of runs nº 373 and nº 374 closed the attribution — with the
+budget absolved, grounded recall stayed at 9.4–9.8 % because
+claims died at origin for FORM: 29 (nº 373) and 36 (nº 374)
+findings whose cited evidence matched the head file exactly
+were settled in this conversion under
+``sin_patron_concreto_en_el_reclamo`` solely because the
+emission's ``pattern`` field came back missing, not a list,
+or empty — before the birth shaper's Case B mining, the
+pipeline's own rescue for pattern-less claims, could ever see
+them (zero ``production_shaping`` settlements in either run).
+The amendment, in this same shared layer: a finding with NO
+declared pattern is no longer settled in the conversion; it
+is built as a candidate exactly as born and flows to the
+shaping stage, whose closed mining extracts a pattern from
+its own prose against its citation or declares it
+unverifiable at origin under the same code — a claim now dies
+for lack of anything extractable (matter), not for an
+undeclared field (form).  Nothing else moves: a declared
+pattern that contradicts the message's asserted tokens still
+settles here as before, the model's own ``unverifiable``
+declarations still settle here as before, and the shaping
+stage, the claim contract and every gate stay unmodified.
+Gate resolution additionally admits "v151"
+(alma-evidence-gate/1.5.1, the same amendment's gate half:
+the 1.5.0 plus the extraction pre-pass), with the 1.5.0's
+claim family.  ``REVIEWER_VERSION`` stays "llm-reviewer/2.4.0",
+as with the two amendments above.
 """
 
 from __future__ import annotations
@@ -150,6 +180,7 @@ from .alma_gate_v150 import (
     _is_code_token,
     _normalize_token,
 )
+from .alma_gate_v151 import POLICY_VERSION as GATE_V151_VERSION
 from .base_reviewer import Candidate
 from .birth_shaper import shape_candidates
 from .diff_parser import DiffIndex
@@ -570,11 +601,19 @@ def _resolve_gate_v24(
     behaviour is the 1.4.1's by delegation; verified by
     program: ``KNOWN_CLAIM_TYPES_V150`` equals the v13 set) —
     and delegates every other value to ``_resolve_gate_v23``,
-    which stays byte-identical."""
+    which stays byte-identical.  The gate-form amendment
+    (ADENDA-PUERTA-FORMA-20261027) adds the "v151" branch
+    beside it, with the same family and guidance."""
 
     gate_version = (config.get("gate") or "v1").strip().lower()
     if gate_version == "v150":
         return KNOWN_CLAIM_TYPES_V13, _CLASS_GUIDANCE_V13, GATE_V150_VERSION
+    if gate_version == "v151":
+        # Gate-form amendment (ADENDA-PUERTA-FORMA-20261027):
+        # the 1.5.1's specialty family is the 1.5.0's — its
+        # class behaviour is the 1.4.1's by delegation through
+        # the 1.5.0 — so only the version string moves.
+        return KNOWN_CLAIM_TYPES_V13, _CLASS_GUIDANCE_V13, GATE_V151_VERSION
     return _resolve_gate_v23(config)
 
 
@@ -1315,12 +1354,19 @@ class LLMReviewerV24:
         malformed; findings whose cited lines do not exist in the
         head file or whose quoted evidence does not match it exactly
         count as unanchored.  Then the schema's own paths (steps
-        2–3): a finding with no declared pattern, or whose declared
-        pattern differs from the pattern its message asserts, is
-        born marked unverifiable at origin — settled in the
-        production ledger, never emitted, never counted malformed.
-        Whether the declared tokens stand in the citation is NOT
-        judged here: that is the shaping stage's settled trim."""
+        2–3): a finding whose declared pattern differs from the
+        pattern its message asserts is born marked unverifiable
+        at origin — settled in the production ledger, never
+        emitted, never counted malformed.  A finding with NO
+        declared pattern is NOT settled here (gate-form
+        amendment, ADENDA-PUERTA-FORMA-20261027): it is built as
+        a candidate exactly as born and the shaping stage —
+        whose Case B exists precisely for pattern-less claims —
+        extracts its pattern from its own prose against its
+        citation or declares it unverifiable at origin under the
+        same code.  Whether the declared tokens stand in the
+        citation is NOT judged here: that is the shaping stage's
+        settled trim."""
 
         label = pass_name if pass_name is not None else FALLBACK_PASS
         if not isinstance(raw, dict):
@@ -1373,25 +1419,16 @@ class LLMReviewerV24:
             info.unanchored_findings += 1
             return None
 
-        # The evidence-first paths (paper §2c, steps 2–3).
+        # The evidence-first paths (paper §2c, steps 2–3, with
+        # the gate-form amendment of ADENDA-PUERTA-FORMA-20261027:
+        # no declared pattern no longer settles here — the
+        # candidate is built as born and the shaping stage's
+        # Case B mining decides its fate; only a CONTRADICTORY
+        # declaration — a pattern is declared and the message
+        # asserts a different one — still settles here).
         declared = _declared_pattern(raw)
-        if not declared:
-            self._settle_ledger(
-                info,
-                pass_name=label,
-                claim_type=claim_type,
-                file=file,
-                start_line=start,
-                end_line=end,
-                code=CODE_NO_PATTERN,
-                reason=(
-                    "the finding declares no pattern copied from its "
-                    "cited lines (pattern missing, not a list, or empty)"
-                ),
-            )
-            return None
         asserted = _asserted_tokens(message)
-        if set(declared) != set(asserted):
+        if declared and set(declared) != set(asserted):
             self._settle_ledger(
                 info,
                 pass_name=label,

@@ -40,6 +40,11 @@ from .alma_gate_v150 import (
     POLICY_VERSION as POLICY_VERSION_V150,
     AlmaGateV150,
 )
+from .alma_gate_v151 import (
+    POLICY_SHA256 as POLICY_SHA256_V151,
+    POLICY_VERSION as POLICY_VERSION_V151,
+    AlmaGateV151,
+)
 from .base_reviewer import BaseReviewer, Candidate
 from .diff_parser import parse_unified_diff
 from .llm_reviewer import LLMReviewer, RealLLMRefused
@@ -106,7 +111,12 @@ def _select_gate(config: Mapping[str, str]):
     alma-evidence-gate/1.5.0 (PREREGISTRO-PUERTA-150.md: the
     1.4.1 by delegation for the 19 classes, plus the grounding
     rule for the general categories — admitted here by the
-    mounting declared in PREREGISTRO-VALIDACION-20261024.md §3).
+    mounting declared in PREREGISTRO-VALIDACION-20261024.md §3);
+    "v151" is alma-evidence-gate/1.5.1
+    (ADENDA-PUERTA-FORMA-20261027.md: the 1.5.0 by delegation,
+    plus the extraction pre-pass — a general claim asserting no
+    code token is not held for form without a deterministic
+    extraction attempt over its own prose and citation).
     The gate exists only in the ALMA arm; the base arm bypasses
     any gate."""
 
@@ -125,10 +135,12 @@ def _select_gate(config: Mapping[str, str]):
         return AlmaGateV141()
     if gate_version == "v150":
         return AlmaGateV150()
+    if gate_version == "v151":
+        return AlmaGateV151()
     raise ValueError(
         f"unknown gate version {gate_version!r}; "
-        "expected 'v1', 'v11', 'v12', 'v13', 'v14', 'v141' or 'v150' "
-        "(RB_CONFIG_GATE)"
+        "expected 'v1', 'v11', 'v12', 'v13', 'v14', 'v141', 'v150' "
+        "or 'v151' (RB_CONFIG_GATE)"
     )
 
 

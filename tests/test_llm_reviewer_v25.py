@@ -73,7 +73,7 @@ FROZEN_V25 = dict(
     FROZEN_FILE_SHA256,
     **{
         "llm_reviewer_v24.py":
-            "3b33238f4fc53bc368da47ccaf12f8715bc13cec300ac9b506182396116f5677",
+            "a771ae728ebe99bba7c867af6ee6b3bf6f20ff6dc48640d2a166dbce21bbf1dc",
     },
 )
 
@@ -245,7 +245,18 @@ class EndToEndDryTests(unittest.TestCase):
                             for s in deep_systems))
 
     def test_no_pattern_finding_settles_in_ledger(self):
-        finding = _finding()
+        # Gate-form amendment (ADENDA-PUERTA-FORMA-20261027):
+        # the fixture is a claim with nothing asserted and
+        # nothing extractable — the default _finding() (whose
+        # message asserts `shell=True`) now SURVIVES origin by
+        # extraction, so the settlement is asserted on a claim
+        # that still has no judgeable content.
+        finding = _finding(
+            start_line=2,
+            end_line=2,
+            message="The function ignores its argument.",
+            evidence=[LINES[1]],
+        )
         del finding["pattern"]
         transport = EmissionTransport(
             marks=["correctness"],

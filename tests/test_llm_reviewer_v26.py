@@ -84,7 +84,7 @@ FROZEN_V26 = dict(
     FROZEN_FILE_SHA256,
     **{
         "llm_reviewer_v24.py":
-            "3b33238f4fc53bc368da47ccaf12f8715bc13cec300ac9b506182396116f5677",
+            "a771ae728ebe99bba7c867af6ee6b3bf6f20ff6dc48640d2a166dbce21bbf1dc",
         "llm_reviewer_v25.py":
             "47ae82e69589f88be68557eb12747b16acd5d7c7a5a38f776c3d13b4b5a17606",
         "lessons_compiler.py":
@@ -341,7 +341,17 @@ class EndToEndDryTests(unittest.TestCase):
             for s in deep_systems))
 
     def test_no_pattern_finding_settles_in_ledger(self):
-        finding = _finding()
+        # Gate-form amendment (ADENDA-PUERTA-FORMA-20261027):
+        # same declared fixture change as the v2.5 test — a
+        # claim with nothing asserted and nothing extractable;
+        # the default _finding() now survives origin by
+        # extraction and no longer settles.
+        finding = _finding(
+            start_line=2,
+            end_line=2,
+            message="The function ignores its argument.",
+            evidence=[LINES[1]],
+        )
         del finding["pattern"]
         transport = EmissionTransport(
             marks=["correctness"],
